@@ -1,12 +1,11 @@
 import HMACHash
 import JSON
-import HTTPSClient
 
 public struct LINEBotAPI {
     let channelId: String
     let channelSecret: String
     let channelMid: String
-    let client = APIClient(baseUri: "https://trialbot-api.line.me/")
+    let client = APIClient(baseUri: "https://trialbot-api.line.me")
 
     public init(channelId: String, channelSecret: String, channelMid: String) {
         self.channelId = channelId
