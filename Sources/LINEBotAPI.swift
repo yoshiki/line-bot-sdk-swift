@@ -2,22 +2,14 @@ import HMACHash
 import JSON
 import Environment
 
-public typealias Contents = [JSON]
-public typealias ContentsProcessor = Contents -> Contents
-
-infix operator <+> { associativity left }
-public func <+> (processor1: ContentsProcessor, processor2: ContentsProcessor) -> ContentsProcessor {
-    return { contents in
-        return processor2(processor1(contents))
-    }
-}
-
 public enum LINEBotAPIError: ErrorType {
     case ChannelInfoNotFound
+    case ContentNotFound
 }
 
-public struct LINEBotAPI {
+public class LINEBotAPI {
     let client: APIClient
+    var contents = [JSON]()
 
     init() throws {
         let env = Environment()
@@ -82,9 +74,13 @@ public struct LINEBotAPI {
         let content = MessageBuilder().build(stkId: stkId, stkPkgId: stkPkgId, stkVer: stkVer)
         try send(to: mid, content: content)
     }
+}
 
-    public func send(to mid: String..., contentsProcessor: ContentsProcessor) throws {
-        let contents = contentsProcessor([])
+extension LINEBotAPI {
+    public func send(to mid: String...) throws {
+        guard contents.count != 0 else {
+            throw LINEBotAPIError.ContentNotFound
+        }
         let to = JSON.from(mid.map(JSON.from))
         let content = JSON.from([
             "messageNotified": JSON.from(0),
@@ -99,56 +95,39 @@ public struct LINEBotAPI {
         try client.post("/v1/events", json: json)
     }
 
-    public func sendMultipleMessage() -> ContentsProcessor {
-        return { _ in return [] }
+    public func sendMultipleMessage() -> Self {
+        contents.removeAll() // reset
+        return self
     }
 
-    public func addText(text text: String) -> ContentsProcessor {
-        return { contents in
-            var newContents = contents
-            newContents.append(MessageBuilder().build(text: text))
-            return newContents
-        }
+    public func addText(text text: String) -> Self {
+        contents.append(MessageBuilder().build(text: text))
+        return self
     }
 
-    public func addImage(imageUrl: String, previewUrl: String) -> ContentsProcessor {
-        return { contents in
-            var newContents = contents
-            newContents.append(MessageBuilder().build(imageUrl: imageUrl, previewUrl: previewUrl))
-            return newContents
-        }
+    public func addImage(imageUrl: String, previewUrl: String) -> Self {
+        contents.append(MessageBuilder().build(imageUrl: imageUrl, previewUrl: previewUrl))
+        return self
     }
 
-    public func addVideo(videoUrl videoUrl: String, previewUrl: String) -> ContentsProcessor {
-        return { contents in
-            var newContents = contents
-            newContents.append(MessageBuilder().build(videoUrl: videoUrl, previewUrl: previewUrl))
-            return newContents
-        }
+    public func addVideo(videoUrl videoUrl: String, previewUrl: String) -> Self {
+        contents.append(MessageBuilder().build(videoUrl: videoUrl, previewUrl: previewUrl))
+        return self
     }
 
-    public func addAudio(audioUrl audioUrl: String, duration: Int) -> ContentsProcessor {
-        return { contents in
-            var newContents = contents
-            newContents.append(MessageBuilder().build(audioUrl: audioUrl, duration: duration))
-            return newContents
-        }
+    public func addAudio(audioUrl audioUrl: String, duration: Int) -> Self {
+        contents.append(MessageBuilder().build(audioUrl: audioUrl, duration: duration))
+        return self
     }
 
-    public func addLocation(text text: String, address: String, latitude: String, longitude: String) -> ContentsProcessor {
-        return { contents in
-            var newContents = contents
-            newContents.append(MessageBuilder().build(text: text, address: address, latitude: latitude, longitude: longitude))
-            return newContents
-        }
+    public func addLocation(text text: String, address: String, latitude: String, longitude: String) -> Self {
+        contents.append(MessageBuilder().build(text: text, address: address, latitude: latitude, longitude: longitude))
+        return self
     }
 
-    public func addSticker(stkId stkId: String, stkPkgId: String, stkVer: String) -> ContentsProcessor {
-        return { contents in
-            var newContents = contents
-            newContents.append(MessageBuilder().build(stkId: stkId, stkPkgId: stkPkgId, stkVer: stkVer))
-            return newContents
-        }
+    public func addSticker(stkId stkId: String, stkPkgId: String, stkVer: String) -> Self {
+        contents.append(MessageBuilder().build(stkId: stkId, stkPkgId: stkPkgId, stkVer: stkVer))
+        return self
     }
 
     public func validateSignature(json: String, channelSecret: String, signature: String) -> Bool {
