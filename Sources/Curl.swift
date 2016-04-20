@@ -1,6 +1,9 @@
 import CCurl
 import Data
-import Environment
+
+public enum Method: String {
+    case HEAD, GET, POST, PUT, DELETE
+}
 
 public struct Curl {
     class WriteStorage {
@@ -8,12 +11,26 @@ public struct Curl {
     }
 
     private let url: String
+    private let headers: Headers
 
-    public init(url: String) {
+    var timeout = 3
+    var verbose = false
+    var method: Method = .GET
+
+    public init(url: String, headers: Headers = []) {
         self.url = url
+        self.headers = headers
     }
 
-    public func post(body: String) {
+    public func get() {
+        sendRequest(.GET)
+    }
+
+    public func post(body: Data) {
+        sendRequest(.POST, body: body)
+    }
+
+    private func sendRequest(method: Method, body: Data = Data()) {
         let handle = curl_easy_init()
 
         // set url
@@ -22,21 +39,30 @@ public struct Curl {
         }
 
         // set timeout
-        let timeout = 3
         curlHelperSetOptInt(handle, CURLOPT_TIMEOUT, timeout)
 
-        // set post
-        curlHelperSetOptBool(handle, CURLOPT_POST, CURL_TRUE)
+        // set verbose
+        curlHelperSetOptBool(handle, CURLOPT_VERBOSE, verbose ? CURL_TRUE : CURL_FALSE)
+
+        // set method
+        switch method {
+        case .HEAD:
+            curlHelperSetOptBool(handle, CURLOPT_NOBODY, CURL_TRUE)
+            method.rawValue.withCString {
+                curlHelperSetOptString(handle, CURLOPT_CUSTOMREQUEST, UnsafeMutablePointer($0))
+            }
+        case .GET:
+            curlHelperSetOptBool(handle, CURLOPT_HTTPGET, CURL_TRUE)
+        case .POST:
+            curlHelperSetOptBool(handle, CURLOPT_POST, CURL_TRUE)
+        default:
+            method.rawValue.withCString {
+                curlHelperSetOptString(handle, CURLOPT_CUSTOMREQUEST, UnsafeMutablePointer($0))
+            }
+        }
 
         // set headers
-        let env = Environment()
         var headersList: UnsafeMutablePointer<curl_slist> = nil
-        let headers: [(String, String)] = [
-            ("Content-Type", "application/json; charset=utf-8"),
-            ("X-Line-ChannelID", env.getVar("LINE_CHANNEL_ID")!),
-            ("X-Line-ChannelSecret", env.getVar("LINE_CHANNEL_SECRET")!),
-            ("X-Line-Trusted-User-With-ACL", env.getVar("LINE_BOT_MID")!),
-        ]
         for (key, value) in headers {
             let header = "\(key): \(value)"
             header.withCString {
@@ -48,10 +74,10 @@ public struct Curl {
         }
 
         // set body
-        let data = Data(body)
-        curlHelperSetOptInt(handle, CURLOPT_POSTFIELDSIZE, data.count)
-        var bytes = unsafeBitCast(data.bytes, [CChar].self)
-        curlHelperSetOptString(handle, CURLOPT_POSTFIELDS, &bytes)
+        if body.count > 0 {
+            curlHelperSetOptInt(handle, CURLOPT_POSTFIELDSIZE, body.count)
+            curlHelperSetOptString(handle, CURLOPT_POSTFIELDS, UnsafeMutablePointer<Int8>(body.bytes))
+        }
 
         // set write func
         var writeStorage = WriteStorage()

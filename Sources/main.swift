@@ -1,16 +1,13 @@
 import Environment
 
 let env = Environment()
-if let channelId = env.getVar("LINE_CHANNEL_ID"),
-    channelSecret = env.getVar("LINE_CHANNEL_SECRET"),
-    channelMid = env.getVar("LINE_BOT_MID"),
-    to = env.getVar("TO") {
-    let bot = LINEBotAPI(channelId: channelId, channelSecret: channelSecret, channelMid: channelMid)
-    do {
-        try bot.sendText(to: to, text: "こんにちは")
-    } catch let e {
-        print(e)
+do {
+    if let to = env.getVar("TO_MID") {
+        let bot = try LINEBotAPI()
+        try bot.sendText(to: to, text: "こんにちは！こんにちは！")
+    } else {
+        print("set env TO_MID")
     }
-} else {
-    print("Need to specify env")
+} catch let e {
+    print(e)
 }
