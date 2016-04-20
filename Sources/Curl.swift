@@ -3,14 +3,6 @@ import Data
 import Environment
 
 public struct Curl {
-    class ReadStorage {
-        let data: Data
-        var currentIndex = 0
-        init(data: Data) {
-            self.data = data
-        }
-    }
-
     class WriteStorage {
         var data = Data()
     }
@@ -21,7 +13,7 @@ public struct Curl {
         self.url = url
     }
 
-    public func post(data: String) {
+    public func post(body: String) {
         let handle = curl_easy_init()
 
         // set url
@@ -55,37 +47,22 @@ public struct Curl {
             curlHelperSetOptHeaders(handle, headersList)
         }
 
-        var readStorage = ReadStorage(data: Data(data))
-        curlHelperSetOptInt(handle, CURLOPT_POSTFIELDSIZE, readStorage.data.count)
-
-        curlHelperSetOptReadFunc(handle, &readStorage) { (buf: UnsafeMutablePointer<Int8>, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>) -> Int in
-            let storage = UnsafePointer<ReadStorage?>(privateData)
-            guard let data = storage.memory?.data else { return 0 }
-            guard let currentIndex = storage.memory?.currentIndex else { return 0 }
-            guard (size * nMemb) > 0 else { return 0 }
-            guard currentIndex < data.count else { return 0 }
-
-            let byte = data[currentIndex]
-            let char = CChar(byte)
-            buf.memory = char
-            // storage.memory?.currentIndex += 1
-
-            return 1
-        }
+        // set body
+        let data = Data(body)
+        curlHelperSetOptInt(handle, CURLOPT_POSTFIELDSIZE, data.count)
+        var bytes = unsafeBitCast(data.bytes, [CChar].self)
+        curlHelperSetOptString(handle, CURLOPT_POSTFIELDS, &bytes)
 
         // set write func
         var writeStorage = WriteStorage()
         curlHelperSetOptWriteFunc(handle, &writeStorage) { (ptr: UnsafeMutablePointer<Int8>, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>) -> Int in
-            // let storage = UnsafePointer<WriteStorage>(privateData)
-            // let realsize = size * nMemb
-            // var pointer = ptr
-            // for _ in 1...realsize {
-            //     let byte = pointer.memory
-            //     storage.memory.data.bytes.append(Byte(byte))
-            //     pointer = pointer.successor()
-            // }
-            // return realsize
-            return size * nMemb
+            let storage = UnsafePointer<WriteStorage>(privateData)
+            let realsize = size * nMemb
+            let data = Data(pointer: ptr, length: realsize)
+            for byte in data.bytes {
+                storage.memory.data.appendByte(byte)
+            }
+            return realsize
         }
 
         // perform
