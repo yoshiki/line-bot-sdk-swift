@@ -8,10 +8,10 @@ public enum LINEBotAPIError: ErrorType {
 }
 
 public class LINEBotAPI {
-    let client: APIClient
-    var contents = [JSON]()
+    private let client: APIClient
+    private var contents = [JSON]()
 
-    init() throws {
+    public init() throws {
         let env = Environment()
         guard let channelId = env.getVar("LINE_CHANNEL_ID"),
             channelSecret = env.getVar("LINE_CHANNEL_SECRET"),
@@ -19,7 +19,7 @@ public class LINEBotAPI {
             throw LINEBotAPIError.ChannelInfoNotFound
         }
 
-        let baseUri = "https://trialbot-api.line.me"
+        let baseUri = "https://trialbot-api.line.me/"
         let channelInfo = [
             "ChannelId": channelId,
             "ChannelSecret": channelSecret,

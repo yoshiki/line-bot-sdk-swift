@@ -28,12 +28,19 @@ public struct APIClient {
     }
 
     public func get(path: String) throws {
-        let curl = Curl(url: "\(self.baseUri)\(path)", headers: headers)
+        let uri = try cleanupUri(baseUri: baseUri, path: path)
+        let curl = Curl(url: uri.description, headers: headers)
         curl.get()
     }
 
     public func post(path: String, json: JSON) throws {
-        let curl = Curl(url: "\(self.baseUri)\(path)", headers: headers)
+        let uri = try cleanupUri(baseUri: baseUri, path: path)
+        let curl = Curl(url: uri.description, headers: headers)
         curl.post(JSONSerializer().serialize(json))
+    }
+
+    private func cleanupUri(baseUri baseUri: String, path: String) throws -> URI {
+        let u = try URI(string: baseUri)
+        return URI(scheme: u.scheme, host: u.host, path: path)
     }
 }
