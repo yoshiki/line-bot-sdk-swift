@@ -1,31 +1,40 @@
-import HMACHash
-import JSON
-import Environment
+//import HMACHash
+#if os(Linux)
+import Glibc
+#else
+import Darwin
+#endif
 
-public enum LINEBotAPIError: ErrorType {
+import JSON
+
+public enum LINEBotAPIError: ErrorProtocol {
     case ChannelInfoNotFound
     case ContentNotFound
 }
 
+func getVar(name: String) -> String? {
+    let out = getenv(name)
+    return String(validatingUTF8: out)
+}
+
 public class LINEBotAPI {
     private let client: APIClient
+    private let headers: Headers
     private var contents = [JSON]()
 
     public init() throws {
-        let env = Environment()
-        guard let channelId = env.getVar("LINE_CHANNEL_ID"),
-            channelSecret = env.getVar("LINE_CHANNEL_SECRET"),
-            channelMid = env.getVar("LINE_BOT_MID") else {
+        guard let channelId = getVar(name: "LINE_CHANNEL_ID"),
+            channelSecret = getVar(name: "LINE_CHANNEL_SECRET"),
+            channelMid = getVar(name: "LINE_BOT_MID") else {
             throw LINEBotAPIError.ChannelInfoNotFound
         }
-
-        let baseUri = "https://trialbot-api.line.me/"
-        let channelInfo = [
-            "ChannelId": channelId,
-            "ChannelSecret": channelSecret,
-            "ChannelMid": channelMid,
+        self.headers = [
+            ("Content-Type", "application/json; charset=utf-8"),
+            ("X-Line-ChannelID", channelId),
+            ("X-Line-ChannelSecret", channelSecret),
+            ("X-Line-Trusted-User-With-ACL", channelMid),
         ]
-        self.client = APIClient(baseUri: baseUri, channelInfo: channelInfo)
+        self.client = APIClient(headers: headers)
     }
 
     public func parseMessage(json: String) throws -> MessageType? {
@@ -42,7 +51,7 @@ public class LINEBotAPI {
             "eventType": JSON.from(EventType.SendingMessage.rawValue),
             "content": newContent,
         ])
-        try client.post("/v1/events", json: json)
+        try client.post(uri: "https://trialbot-api.line.me/v1/events", json: json)
     }
 
     public func sendText(to mid: String..., text: String) throws {
@@ -92,7 +101,7 @@ extension LINEBotAPI {
             "eventType": JSON.from(EventType.SendingMultipleMessage.rawValue),
             "content": content,
         ])
-        try client.post("/v1/events", json: json)
+        try client.post(uri: "https://trialbot-api.line.me/v1/events", json: json)
     }
 
     public func sendMultipleMessage() -> Self {
@@ -100,7 +109,7 @@ extension LINEBotAPI {
         return self
     }
 
-    public func addText(text text: String) -> Self {
+    public func addText(text: String) -> Self {
         contents.append(MessageBuilder().build(text: text))
         return self
     }
@@ -110,28 +119,28 @@ extension LINEBotAPI {
         return self
     }
 
-    public func addVideo(videoUrl videoUrl: String, previewUrl: String) -> Self {
+    public func addVideo(videoUrl: String, previewUrl: String) -> Self {
         contents.append(MessageBuilder().build(videoUrl: videoUrl, previewUrl: previewUrl))
         return self
     }
 
-    public func addAudio(audioUrl audioUrl: String, duration: Int) -> Self {
+    public func addAudio(audioUrl: String, duration: Int) -> Self {
         contents.append(MessageBuilder().build(audioUrl: audioUrl, duration: duration))
         return self
     }
 
-    public func addLocation(text text: String, address: String, latitude: String, longitude: String) -> Self {
+    public func addLocation(text: String, address: String, latitude: String, longitude: String) -> Self {
         contents.append(MessageBuilder().build(text: text, address: address, latitude: latitude, longitude: longitude))
         return self
     }
 
-    public func addSticker(stkId stkId: String, stkPkgId: String, stkVer: String) -> Self {
+    public func addSticker(stkId: String, stkPkgId: String, stkVer: String) -> Self {
         contents.append(MessageBuilder().build(stkId: stkId, stkPkgId: stkPkgId, stkVer: stkVer))
         return self
     }
 
-    public func validateSignature(json: String, channelSecret: String, signature: String) -> Bool {
-        let calced = HMACHash().hmac(.SHA256, key: channelSecret, data: json)
-        return (calced.hexString() == signature)
-    }
+//    public func validateSignature(json: String, channelSecret: String, signature: String) -> Bool {
+//        let calced = HMACHash().hmac(.SHA256, key: channelSecret, data: json)
+//        return (calced.hexString() == signature)
+//    }
 }

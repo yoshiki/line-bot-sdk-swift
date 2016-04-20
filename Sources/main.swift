@@ -1,8 +1,5 @@
-import Environment
-
-let env = Environment()
 do {
-    if let to = env.getVar("TO_MID") {
+    if let to = getVar(name: "TO_MID") {
         let bot = try LINEBotAPI()
         try bot.sendText(to: to, text: "こんにちは！こんにちは！")
         // try bot.sendMultipleMessage()

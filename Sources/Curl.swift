@@ -1,5 +1,5 @@
 import CCurl
-import Data
+import C7
 
 public enum Method: String {
     case HEAD, GET, POST, PUT, DELETE
@@ -23,11 +23,11 @@ public struct Curl {
     }
 
     public func get() {
-        sendRequest(.GET)
+        sendRequest(method: .GET)
     }
 
     public func post(body: Data) {
-        sendRequest(.POST, body: body)
+        sendRequest(method: .POST, body: body)
     }
 
     private func sendRequest(method: Method, body: Data = Data()) {
@@ -62,14 +62,15 @@ public struct Curl {
         }
 
         // set headers
-        var headersList: UnsafeMutablePointer<curl_slist> = nil
+        var headersList = UnsafeMutablePointer<curl_slist>(allocatingCapacity: sizeof(curl_slist))
         for (key, value) in headers {
             let header = "\(key): \(value)"
             header.withCString {
                 headersList = curl_slist_append(headersList, UnsafeMutablePointer($0))
             }
         }
-        if headersList != nil {
+        print(headersList)
+        if headers.count > 0 {
             curlHelperSetOptHeaders(handle, headersList)
         }
 
@@ -81,12 +82,15 @@ public struct Curl {
 
         // set write func
         var writeStorage = WriteStorage()
-        curlHelperSetOptWriteFunc(handle, &writeStorage) { (ptr: UnsafeMutablePointer<Int8>, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>) -> Int in
+        curlHelperSetOptWriteFunc(handle, &writeStorage) { (ptr, size, nMemb, privateData) -> Int in
             let storage = UnsafePointer<WriteStorage>(privateData)
             let realsize = size * nMemb
-            let data = Data(pointer: ptr, length: realsize)
-            for byte in data.bytes {
-                storage.memory.data.appendByte(byte)
+
+            var bytes: [UInt8] = [UInt8](repeating: 0, count: realsize)
+            memcpy(&bytes, ptr, realsize)
+
+            for byte in bytes {
+                storage?.pointee.data.append(byte)
             }
             return realsize
         }
@@ -97,7 +101,7 @@ public struct Curl {
             print(writeStorage.data)
         } else {
             let error = curl_easy_strerror(ret)
-            if let errStr = String.fromCString(error) {
+            if let errStr = String(validatingUTF8: error) {
                 print("error = \(errStr)")
             }
             print("ret = \(ret)")
@@ -105,9 +109,6 @@ public struct Curl {
 
         // cleanup
         curl_easy_cleanup(handle)
-
-        if headersList != nil {
-            curl_slist_free_all(headersList)
-        }
+        curl_slist_free_all(headersList)
     }
 }

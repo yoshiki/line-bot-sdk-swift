@@ -1,14 +1,14 @@
 import JSON
 
 public struct MessageBuilder {
-    public func build(text text: String) -> JSON {
+    public func build(text: String) -> JSON {
         return JSON.from([
             "contentType": JSON.from(ContentType.Text.rawValue),
             "text": JSON.from(text),
         ])
     }
 
-    public func build(imageUrl imageUrl: String, previewUrl: String) -> JSON {
+    public func build(imageUrl: String, previewUrl: String) -> JSON {
         return JSON.from([
             "contentType": JSON.from(ContentType.Image.rawValue),
             "originalContentUrl": JSON.from(imageUrl),
@@ -16,7 +16,7 @@ public struct MessageBuilder {
         ])
     }
 
-    public func build(videoUrl videoUrl: String, previewUrl: String) -> JSON {
+    public func build(videoUrl: String, previewUrl: String) -> JSON {
         return JSON.from([
             "contentType": JSON.from(ContentType.Video.rawValue),
             "originalContentUrl": JSON.from(videoUrl),
@@ -24,7 +24,7 @@ public struct MessageBuilder {
         ])
     }
 
-    public func build(audioUrl audioUrl: String, duration: Int) -> JSON {
+    public func build(audioUrl: String, duration: Int) -> JSON {
         let metaData = JSON.from([ "AUDLEN": "\(duration)" ])
         return JSON.from([
             "contentType": JSON.from(ContentType.Audio.rawValue),
@@ -33,7 +33,7 @@ public struct MessageBuilder {
         ])
     }
 
-    public func build(text text: String, address: String, latitude: String, longitude: String) -> JSON {
+    public func build(text: String, address: String, latitude: String, longitude: String) -> JSON {
         let location = JSON.from([
             "title": JSON.from(address),
             "latitude": JSON.from(latitude),
@@ -46,7 +46,7 @@ public struct MessageBuilder {
         ])
     }
 
-    public func build(stkId stkId: String, stkPkgId: String, stkVer: String) -> JSON {
+    public func build(stkId: String, stkPkgId: String, stkVer: String) -> JSON {
         let metaData = JSON.from([
             "STKID": JSON.from(stkId),
             "STKPKGID": JSON.from(stkPkgId),

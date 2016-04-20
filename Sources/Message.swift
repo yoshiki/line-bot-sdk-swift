@@ -1,5 +1,4 @@
 import JSON
-import Data
 
 public enum ContentType: Int {
     case Text     = 1
@@ -46,7 +45,8 @@ public class Message: MessageType {
     }
 
     public static func initFromJSON(json jsonString: String) throws -> MessageType? {
-        let json = try JSONParser().parse(Data(jsonString))
+//        let json = try JSONParser().parse(Data(jsonString))
+        let json = JSON(stringLiteral: "")
         let contentType = json.get(path: "result.content.contentType")
                           .flatMap { $0.int }
                           .flatMap { ContentType(rawValue: $0) }

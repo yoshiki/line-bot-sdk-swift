@@ -1,46 +1,26 @@
 import URI
 import JSON
-import Environment
 
 public typealias Headers = [(String,String)]
-public typealias ChannelInfo = [String:String]
 
-public enum APIClientError: ErrorType {
+public enum APIClientError: ErrorProtocol {
     case InvalidURI
 }
 
 public struct APIClient {
-    let baseUri: String
-    let channelInfo: ChannelInfo
+    var headers: Headers
 
-    var headers: Headers {
-        return [
-            ("Content-Type", "application/json; charset=utf-8"),
-            ("X-Line-ChannelID", channelInfo["ChannelId"]!),
-            ("X-Line-ChannelSecret", channelInfo["ChannelSecret"]!),
-            ("X-Line-Trusted-User-With-ACL", channelInfo["ChannelMid"]!),
-        ]
+    public init(headers: Headers) {
+        self.headers = headers
     }
 
-    public init(baseUri: String, channelInfo: ChannelInfo) {
-        self.baseUri = baseUri
-        self.channelInfo = channelInfo
-    }
-
-    public func get(path: String) throws {
-        let uri = try cleanupUri(baseUri: baseUri, path: path)
-        let curl = Curl(url: uri.description, headers: headers)
+    public func get(uri: String) throws {
+        let curl = Curl(url: uri, headers: headers)
         curl.get()
     }
 
-    public func post(path: String, json: JSON) throws {
-        let uri = try cleanupUri(baseUri: baseUri, path: path)
-        let curl = Curl(url: uri.description, headers: headers)
-        curl.post(JSONSerializer().serialize(json))
-    }
-
-    private func cleanupUri(baseUri baseUri: String, path: String) throws -> URI {
-        let u = try URI(string: baseUri)
-        return URI(scheme: u.scheme, host: u.host, path: path)
+    public func post(uri: String, json: JSON) throws {
+        let curl = Curl(url: uri, headers: headers)
+        curl.post(body: JSONSerializer().serialize(json: json))
     }
 }
