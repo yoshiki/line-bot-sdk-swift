@@ -1,16 +1,18 @@
 import CCurl
+import Data
 import Environment
 
 public struct Curl {
-    class Received {
-        var data = String()
-    }
-
-    class Send {
-        let data: String
-        init(data: String) {
+    class ReadStorage {
+        let data: Data
+        var currentIndex = 0
+        init(data: Data) {
             self.data = data
         }
+    }
+
+    class WriteStorage {
+        var data = Data()
     }
 
     private let url: String
@@ -53,35 +55,43 @@ public struct Curl {
             curlHelperSetOptHeaders(handle, headersList)
         }
 
-        var send = Send(data: data)
-        send.data.withCString {
-            let data = UnsafeMutablePointer<Int8>($0)
-            curlHelperSetOptInt(handle, CURLOPT_POSTFIELDSIZE, Int(strlen(data)))
-        }
+        var readStorage = ReadStorage(data: Data(data))
+        curlHelperSetOptInt(handle, CURLOPT_POSTFIELDSIZE, readStorage.data.count)
 
-        curlHelperSetOptReadFunc(handle, &send) { (buf: UnsafeMutablePointer<Int8>, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>) -> Int in
-            let p = UnsafePointer<Send?>(privateData)
-            let len = size * nMemb
-            if let data = p.memory?.data {
-                memcpy(buf, data, len)
-            }
-            return len
+        curlHelperSetOptReadFunc(handle, &readStorage) { (buf: UnsafeMutablePointer<Int8>, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>) -> Int in
+            let storage = UnsafePointer<ReadStorage?>(privateData)
+            guard let data = storage.memory?.data else { return 0 }
+            guard let currentIndex = storage.memory?.currentIndex else { return 0 }
+            guard (size * nMemb) > 0 else { return 0 }
+            guard currentIndex < data.count else { return 0 }
+
+            let byte = data[currentIndex]
+            let char = CChar(byte)
+            buf.memory = char
+            // storage.memory?.currentIndex += 1
+
+            return 1
         }
 
         // set write func
-        var received = Received()
-        curlHelperSetOptWriteFunc(handle, &received) { (ptr: UnsafeMutablePointer<Int8>, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>) -> Int in
-            let p = UnsafePointer<Received?>(privateData)
-            if let line = String.fromCString(ptr) {
-                p.memory?.data.appendContentsOf(line)
-            }
+        var writeStorage = WriteStorage()
+        curlHelperSetOptWriteFunc(handle, &writeStorage) { (ptr: UnsafeMutablePointer<Int8>, size: Int, nMemb: Int, privateData: UnsafeMutablePointer<Void>) -> Int in
+            // let storage = UnsafePointer<WriteStorage>(privateData)
+            // let realsize = size * nMemb
+            // var pointer = ptr
+            // for _ in 1...realsize {
+            //     let byte = pointer.memory
+            //     storage.memory.data.bytes.append(Byte(byte))
+            //     pointer = pointer.successor()
+            // }
+            // return realsize
             return size * nMemb
         }
 
         // perform
         let ret = curl_easy_perform(handle)
         if ret == CURLE_OK {
-            print(received.data)
+            print(writeStorage.data)
         } else {
             let error = curl_easy_strerror(ret)
             if let errStr = String.fromCString(error) {
