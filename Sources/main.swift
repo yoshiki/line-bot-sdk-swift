@@ -16,9 +16,11 @@ do {
     let router = Router { (route) in
         route.post("/linebot/callback") { request -> Response in
             // get body
-            var body: JSON? = nil
+            var body: String = ""
             if case .buffer(let data) = request.body {
-                body = try JSONParser().parse(data: data)
+                body = String(data)
+            } else {
+                return Response(status: Status.forbidden)
             }
             
             // validate signature
@@ -27,7 +29,7 @@ do {
             }
             
             let isValid = try bot.validateSignature(
-                json: body!.toString(),
+                json: body,
                 channelSecret: bot.channelSecret,
                 signature: signature
             )
@@ -37,7 +39,8 @@ do {
             }
             
             // handle contents
-            if let result = body!.get(path: "result") {
+            let json = try JSONParser().parse(data: Data(body))
+            if let result = json.get(path: "result") {
                 let contents = try result.asArray()
                 for content in contents {
                     try handle(bot: bot, content: content)
