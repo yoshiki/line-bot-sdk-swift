@@ -1,6 +1,7 @@
 import HTTPServer
 import Router
 import JSON
+import String
 
 func handle(bot: LINEBotAPI, content: JSON) throws {
     if let message = try bot.parseMessage(json: content) {
@@ -25,7 +26,7 @@ do {
                 return Response(status: Status.forbidden)
             }
             
-            let isValid = bot.validateSignature(
+            let isValid = try bot.validateSignature(
                 json: body!.toString(),
                 channelSecret: bot.channelSecret,
                 signature: signature

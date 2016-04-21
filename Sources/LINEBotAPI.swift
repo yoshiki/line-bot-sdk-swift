@@ -1,4 +1,3 @@
-//import HMACHash
 #if os(Linux)
 import Glibc
 #else
@@ -6,7 +5,8 @@ import Darwin
 #endif
 
 import JSON
-import HMACHash
+import OpenSSL
+import Base64
 
 public enum LINEBotAPIError: ErrorProtocol {
     case ChannelInfoNotFound
@@ -47,9 +47,10 @@ public class LINEBotAPI {
         self.client = APIClient(headers: headers)
     }
 
-    public func validateSignature(json: String, channelSecret: String, signature: String) -> Bool {
-        let calced = HMACHash().hmac(type: .SHA256, key: channelSecret, data: json)
-        return (calced.hexadecimalString(inGroupsOf: 0) == signature)
+    public func validateSignature(json: String, channelSecret: String, signature: String) throws -> Bool {
+        let hashed = Hash.hmac(.SHA256, key: Data(channelSecret), message: Data(json))
+        let base64 = try Base64.encode(hashed)
+        return (base64 == signature)
     }
 
     public func parseMessage(json: JSON) throws -> MessageType? {
