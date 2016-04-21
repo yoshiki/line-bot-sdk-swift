@@ -14,14 +14,21 @@ public enum LINEBotAPIError: ErrorProtocol {
 }
 
 func getVar(name: String) -> String? {
-    let out = getenv(name)
-    return String(validatingUTF8: out)
+    if let out = getenv(name) {
+        return String(validatingUTF8: out)
+    } else {
+        return nil
+    }
 }
 
 public class LINEBotAPI {
     private let client: APIClient
     private let headers: Headers
     private var contents = [JSON]()
+    
+    public let channelId: String
+    public let channelSecret: String
+    public let channelMid: String
 
     public init() throws {
         guard let channelId = getVar(name: "LINE_CHANNEL_ID"),
@@ -35,10 +42,18 @@ public class LINEBotAPI {
             ("X-Line-ChannelSecret", channelSecret),
             ("X-Line-Trusted-User-With-ACL", channelMid),
         ]
+        self.channelId = channelId
+        self.channelSecret = channelSecret
+        self.channelMid = channelMid
         self.client = APIClient(headers: headers)
     }
 
-    public func parseMessage(json: String) throws -> MessageType? {
+    public func validateSignature(json: String, channelSecret: String, signature: String) -> Bool {
+        let calced = HMACHash().hmac(type: .SHA256, key: channelSecret, data: json)
+        return (calced.hexadecimalString(inGroupsOf: 0) == signature)
+    }
+
+    public func parseMessage(json: JSON) throws -> MessageType? {
         return try Message.initFromJSON(json: json)
     }
 
@@ -138,10 +153,5 @@ extension LINEBotAPI {
     public func addSticker(stkId: String, stkPkgId: String, stkVer: String) -> Self {
         contents.append(MessageBuilder().build(stkId: stkId, stkPkgId: stkPkgId, stkVer: stkVer))
         return self
-    }
-
-    public func validateSignature(json: String, channelSecret: String, signature: String) -> Bool {
-        let calced = HMACHash().hmac(type: .SHA256, key: channelSecret, data: json)
-        return (calced.hexadecimalString(inGroupsOf: 0) == signature)
     }
 }

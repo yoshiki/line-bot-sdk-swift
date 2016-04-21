@@ -17,20 +17,20 @@ public protocol MessageType {
 
 extension MessageType {
     public var contentId: String? {
-        return self["result.content.id"].flatMap { $0.string }
+        return self["result.0.content.id"].flatMap { $0.string }
     }
 
     public var contentType: ContentType? {
-        return self["result.content.contentType"].flatMap { $0.int }
+        return self["result.0.content.contentType"].flatMap { $0.int }
           .flatMap { ContentType(rawValue: $0) }
     }
 
     public var createTime: String? {
-        return self["result.content.createdTime"].flatMap { $0.string }
+        return self["result.0.content.createdTime"].flatMap { $0.string }
     }
 
     public var fromMid: String? {
-        return self["result.content.from"].flatMap { $0.string }
+        return self["result.0.content.from"].flatMap { $0.string }
     }
 
     public subscript(path: String) -> JSON? {
@@ -44,11 +44,9 @@ public class Message: MessageType {
         self.json = json
     }
 
-    public static func initFromJSON(json jsonString: String) throws -> MessageType? {
-//        let json = try JSONParser().parse(Data(jsonString))
-        let json = JSON(stringLiteral: "")
-        let contentType = json.get(path: "result.content.contentType")
-                          .flatMap { $0.int }
+    public static func initFromJSON(json: JSON) throws -> MessageType? {
+        let contentType = json.get(path: "result.0.content.contentType")
+                          .flatMap { return $0.int }
                           .flatMap { ContentType(rawValue: $0) }
         if let contentType = contentType {
             switch contentType {
@@ -75,7 +73,7 @@ public class Message: MessageType {
 
 public class TextMessage: Message {
     public var text: String? {
-        return json.get(path: "result.content.text").flatMap{ $0.string }
+        return json.get(path: "result.0.content.text").flatMap{ $0.string }
     }
 }
 
@@ -87,39 +85,39 @@ public class AudioMessage: Message {}
 
 public class LocationMessage: Message {
     var title: String? {
-        return json.get(path: "result.content.location.title").flatMap{ $0.string }
+        return json.get(path: "result.0.content.location.title").flatMap{ $0.string }
     }
     var address: String? {
-        return json.get(path: "result.content.location.address").flatMap{ $0.string }
+        return json.get(path: "result.0.content.location.address").flatMap{ $0.string }
     }
     var latitude: String? {
-        return json.get(path: "result.content.location.latitude").flatMap{ $0.string }
+        return json.get(path: "result.0.content.location.latitude").flatMap{ $0.string }
     }
     var longitude: String? {
-        return json.get(path: "result.content.location.longitude").flatMap{ $0.string }
+        return json.get(path: "result.0.content.location.longitude").flatMap{ $0.string }
     }
 }
 
 public class StickerMessage: Message {
     var stkPkgId: String? {
-        return json.get(path: "result.content.contentMetadata.STKPKGID").flatMap{ $0.string }
+        return json.get(path: "result.0.content.contentMetadata.STKPKGID").flatMap{ $0.string }
     }
     var stkId: String? {
-        return json.get(path: "result.content.contentMetadata.STKID").flatMap{ $0.string }
+        return json.get(path: "result.0.content.contentMetadata.STKID").flatMap{ $0.string }
     }
     var stkVer: String? {
-        return json.get(path: "result.content.contentMetadata.STKVER").flatMap{ $0.string }
+        return json.get(path: "result.0.content.contentMetadata.STKVER").flatMap{ $0.string }
     }
     var stkTxt: String? {
-        return json.get(path: "result.content.contentMetadata.STKTXT").flatMap{ $0.string }
+        return json.get(path: "result.0.content.contentMetadata.STKTXT").flatMap{ $0.string }
     }
 }
 
 public class ContactMessage: Message {
     var mid: String? {
-        return json.get(path: "result.content.contentMetadata.mid").flatMap{ $0.string }
+        return json.get(path: "result.0.content.contentMetadata.mid").flatMap{ $0.string }
     }
     var displayName: String? {
-        return json.get(path: "result.content.contentMetadata.displayName").flatMap{ $0.string }
+        return json.get(path: "result.0.content.contentMetadata.displayName").flatMap{ $0.string }
     }
 }
