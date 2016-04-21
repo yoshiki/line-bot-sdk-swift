@@ -6,3 +6,6 @@ all:
 
 clean:
 	swift build --clean dist
+
+xcode:
+	swift build $(OPTS) --X
