@@ -6,6 +6,7 @@ import Darwin
 #endif
 
 import JSON
+import HMACHash
 
 public enum LINEBotAPIError: ErrorProtocol {
     case ChannelInfoNotFound
@@ -139,8 +140,8 @@ extension LINEBotAPI {
         return self
     }
 
-//    public func validateSignature(json: String, channelSecret: String, signature: String) -> Bool {
-//        let calced = HMACHash().hmac(.SHA256, key: channelSecret, data: json)
-//        return (calced.hexString() == signature)
-//    }
+    public func validateSignature(json: String, channelSecret: String, signature: String) -> Bool {
+        let calced = HMACHash().hmac(type: .SHA256, key: channelSecret, data: json)
+        return (calced.hexadecimalString(inGroupsOf: 0) == signature)
+    }
 }
