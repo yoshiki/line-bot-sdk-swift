@@ -2,8 +2,7 @@ OPTS = -Xlinker -L/usr/local/lib \
 	-Xcc -I/usr/local/include
 OS := $(shell uname)
 
-VENICE_VAR = ./Packages/Venice-*/
-VENICE_DIR := $(wildcard $(VENICE_VAR))
+VENICE_DIR = ./Packages/Venice-*
 
 all:
 	swift build --fetch
