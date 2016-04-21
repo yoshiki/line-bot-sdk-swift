@@ -62,14 +62,13 @@ public struct Curl {
         }
 
         // set headers
-        var headersList = UnsafeMutablePointer<curl_slist>(allocatingCapacity: sizeof(curl_slist))
+        var headersList: UnsafeMutablePointer<curl_slist>?
         for (key, value) in headers {
             let header = "\(key): \(value)"
-            header.withCString {
-                headersList = curl_slist_append(headersList, UnsafeMutablePointer($0))
+            header.withCString { ptr in
+                headersList = curl_slist_append(headersList, ptr)
             }
         }
-        print(headersList)
         if headers.count > 0 {
             curlHelperSetOptHeaders(handle, headersList)
         }
@@ -109,6 +108,9 @@ public struct Curl {
 
         // cleanup
         curl_easy_cleanup(handle)
-        curl_slist_free_all(headersList)
+        
+        if let _ = headersList {
+            curl_slist_free_all(headersList!)
+        }
     }
 }
