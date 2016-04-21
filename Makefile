@@ -3,12 +3,11 @@ OPTS = -Xlinker -L/usr/local/lib \
 OS := $(shell uname)
 
 VENICE_VAR = ./Packages/Venice-*/
-VENICE_DIR = $(wildcard $(VENICE_VAR))
+VENICE_DIR := $(wildcard $(VENICE_VAR))
 
 all:
 	swift build --fetch
-ifeq ($(OS),Darwin)
-else
+ifneq ($(OS),Darwin)
 	mv $(VENICE_DIR)/Source/Venice/*/* $(VENICE_DIR)/Source/
 	rm -fr $(VENICE_DIR)/Source/Venice
 endif
