@@ -6,16 +6,16 @@ public enum Method: String {
 }
 
 public struct Curl {
-    class WriteStorage {
+    private class WriteStorage {
         var data = Data()
     }
 
     private let url: String
     private let headers: Headers
+    private var method: Method = .GET
 
-    var timeout = 3
-    var verbose = false
-    var method: Method = .GET
+    public var timeout = 3
+    public var verbose = false
 
     public init(url: String, headers: Headers = []) {
         self.url = url
@@ -69,8 +69,8 @@ public struct Curl {
                 headersList = curl_slist_append(headersList, ptr)
             }
         }
-        if headers.count > 0 {
-            curlHelperSetOptHeaders(handle, headersList)
+        if let _ = headersList {
+            curlHelperSetOptHeaders(handle, headersList!)
         }
 
         // set body
