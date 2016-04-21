@@ -1,14 +1,16 @@
-OPTS=-Xlinker -L/usr/local/lib \
+OPTS = -Xlinker -L/usr/local/lib \
 	-Xcc -I/usr/local/include
 OS := $(shell uname)
+
+VENICE_VAR = ./Packages/Venice-*/
+VENICE_DIR = $(wildcard $(VENICE_VAR))
 
 all:
 	swift build --fetch
 ifeq ($(OS),Darwin)
 else
-	@echo "Build on Linux"
-	mv Packages/Venice-*/Source/Venice/* Packages/Venice-*/Source/
-	rm -fr Packages/Venice-*/Source/Venice
+	mv $(VENICE_DIR)/Source/Venice/*/* $(VENICE_DIR)/Source/
+	rm -fr $(VENICE_DIR)/Source/Venice
 endif
 	swift build $(OPTS)
 
