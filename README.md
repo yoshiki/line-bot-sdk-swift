@@ -63,7 +63,7 @@ Install Zewo dependencies
 
 #### On OS X
 ```
-% brew install openssl
+% brew install openssl curl
 % brew link --force openssl
 ```
 #### On Linux
