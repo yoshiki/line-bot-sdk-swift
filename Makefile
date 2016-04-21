@@ -8,8 +8,10 @@ VENICE_DIR = ./Packages/Venice-*
 all:
 	swift build --fetch
 ifneq ($(OS),Darwin)
-	mv $(VENICE_DIR)/Source/Venice/*/* $(VENICE_DIR)/Source/
-	rm -fr $(VENICE_DIR)/Source/Venice
+	@if [ -d "$(VENICE_DIR)" ]; then \
+		mv $(VENICE_DIR)/Source/Venice/*/* $(VENICE_DIR)/Source/ ;\
+		rm -fr $(VENICE_DIR)/Source/Venice ;\
+	fi
 endif
 	swift build $(OPTS)
 
