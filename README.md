@@ -30,7 +30,7 @@ Currently LINEBotAPI works with `DEVELOPMENT-SNAPSHOT-2016-04-12-a`.
 
 ## Getting started
 
-### Instlation
+### Installation
 
 Before we start, we need to install some tools and dependencies.
 
@@ -117,7 +117,7 @@ Initialize project directory with swift package manager(**SPM**).
 % swift build --init
 ```
 
-Then this command will create the basic strucure for app.
+Then this command will create the basic structure for app.
 
 ```
 .
@@ -173,7 +173,7 @@ Change lib and include paths to your environment.
 % swift build -Xlinker -L/usr/local/lib -Xcc -I/usr/local/include -Xswiftc -I/usr/local/include
 ```
 
->On Linux only, currently, [venice](https://github.com/VeniceX/Venice)'s directiry structure is invalid. So you must run following command only once before build. For more information, see LINEBotAPI's `Makefile`.
+>On Linux only, currently, [venice](https://github.com/VeniceX/Venice)'s directory structure is invalid. So you must run following command only once before build. For more information, see LINEBotAPI's `Makefile`.
 
 ```
 # fetch dependencies only.
