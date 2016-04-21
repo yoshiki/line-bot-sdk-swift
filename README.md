@@ -1,97 +1,135 @@
 #LINEBotAPI
 
+[![Swift][swift-badge]][swift-url]
+[![Platform][platform-badge]][platform-url]
+[![License][mit-badge]][mit-url]
+[![Bot][linebot-badge]][linebot-url]
+
 ## Overview
 
 **LINEBotAPI** is a SDK of the LINE BOT API Trial for Swift.
 
-- Written in Swift3
+- Swift 3 support
 - Use [Zewo](https://github.com/Zewo/Zewo)
 - Linux Ready
+
+## Features
+
+- [x] Send text/image/video/audio/location/sticker message
+- [x] Send multiple messages
+- [ ] Send rich message
+- [ ] Handling of received operation(add as friend or blocked)
 
 ## A Work In progress
 
 LINEBotAPI is currently in development.
 
-# Getting started
+## Attention
 
-## Instlation
+Currently LINEBotAPI works with `DEVELOPMENT-SNAPSHOT-2016-04-12-a`.
 
-### Install swiftenv
+## Getting started
 
-Install [`swiftenv`](https://github.com/kylef/swiftenv).
+### Instlation
+
+Before we start, we need to install some tools and dependencies.
+
+### swiftenv
+
+[`swiftenv`](https://github.com/kylef/swiftenv) allows you to easily install multiple versions of swift.
 
 ```
 % git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
 ```
-and add setting for your shell.
+and add settings for your shell(For more information, please see [swiftenv's wiki](https://github.com/kylef/swiftenv)).
 
-### Install Swift
+### Swift
 
-Install Swift snapshot named `DEVELOPMENT-SNAPSHOT-2016-04-12-a`
+Install swift using swiftenv.
 
 ```
 % swiftenv install DEVELOPMENT-SNAPSHOT-2016-04-12-a
 ```
 
-### Install libraries relevant to [Zewo](https://github.com/Zewo/Zewo).
+### Install Zewo
 
-#### On OS X
+Install libraries depend on [Zewo](https://github.com/Zewo/Zewo).
 
-Install Zewo dependencies
+- On OS X
 
-```
-% brew install zewo/tap/zewo
-```
+    Install Zewo dependencies
+    ```
+    % brew install zewo/tap/zewo
+    ```
 
-#### On Linux
+- On Linux
 
-Install Clang and ICU
+    Install Zewo dependencies
 
-```
-% sudo apt-get install clang libicu-dev
-```
+    ```
+    % echo "deb [trusted=yes] http://apt.zewo.io/deb ./" | sudo tee --append /etc/apt/sources.list
+    % sudo apt-get update
+    % sudo apt-get install zewo
+    ```
 
-Install Zewo dependencies
+    Install Clang and ICU
 
-```
-% echo "deb [trusted=yes] http://apt.zewo.io/deb ./" | sudo tee --append /etc/apt/sources.list
-% sudo apt-get update
-% sudo apt-get install zewo
-```
+    ```
+    % sudo apt-get install clang libicu-dev
+    ```
 
-### Install other libraries.
+## Install other libraries.
 
-#### On OS X
-```
-% brew install openssl curl
-% brew link --force openssl
-```
-#### On Linux
-```
-% sudo apt-get install build-essential libcurl4-openssl-dev
-```
+- On OS X
 
-### Create project
+    ```
+    % brew install openssl curl
+    % brew link --force openssl
+    ```
 
-Make project directory.
+- On Linux
+
+    ```
+    % sudo apt-get install build-essential libcurl4-openssl-dev
+    ```
+
+# Create project
+
+We got prepared for a creating project.
+
+Let's create your LINE Bot!
+
+## Make project directory.
 
 ```
 % mkdir linebot && cd linebot
 ```
 
-Set swift version to `DEVELOPMENT-SNAPSHOT-2016-04-12-a`
+Set Swift version to `DEVELOPMENT-SNAPSHOT-2016-04-12-a`.
 
 ```
 % swift local DEVELOPMENT-SNAPSHOT-2016-04-12-a
 ```
 
-Create project.
+Initialize project directory with swift package manager(**SPM**).
 
 ```
 % swift build --init
 ```
 
-Edit `Package.swift` to use `LINEBotAPI`.
+Then this command will create the basic strucure for app.
+
+```
+.
+├── Package.swift
+├── Sources
+│   └── main.swift
+└── Tests
+```
+
+## Package.swift
+
+Open `Package.swift` and make it looks like this:
 
 ```swift
 import PackageDescription
@@ -104,9 +142,13 @@ let package = Package(
 )
 ```
 
-Edit `main.swift`.
+## main.swift
+
+Next, write main program in `main.swift`.
 
 ```swift
+import LINEBotAPI
+
 do {
     if let to = getVar(name: "TO_MID") {
         let bot = try LINEBotAPI()
@@ -119,33 +161,57 @@ do {
 }
 ```
 
-### Build project
+This code:
+- get target `mid`(A user id on LINE)
+- send text to `mid` specified.
 
-Specify lib/include directory to your local path.
+## Build project
 
-```
-% make
-```
-or
+Change lib and include paths to your environment.
+
 ```
 % swift build -Xlinker -L/usr/local/lib -Xcc -I/usr/local/include -Xswiftc -I/usr/local/include
 ```
 
-### Run `linebot`
-
-Specify `LINE_CHANNEL_ID`, `LINE_CHANNEL_SECRET` and `LINE_BOT_MID` to yours.
+>On Linux only, currently, [venice](https://github.com/VeniceX/Venice)'s directiry structure is invalid. So you must run following command only once before build. For more information, see LINEBotAPI's `Makefile`.
 
 ```
-% env LINE_CHANNEL_ID=XXXXXXXXX LINE_CHANNEL_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX LINE_BOT_MID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX  TO_MID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX .build/debug/linebot
+# fetch dependencies only.
+% swift build --fetch
+
+# and move source files to upper directory.
+% mv ./Packages/Venice-*/Source/Venice/*/* ./Packages/Venice-*/Source/
+% rm -fr ./Packages/Venice-*/Source/Venice
 ```
 
-You must be able to get a message from bot on LINE if you had setup setting on bot management page.
+## Run it
 
-## Set up server
+After it compiles, run it.
+
+>Your must specify `LINE_CHANNEL_ID`, `LINE_CHANNEL_SECRET`, `LINE_BOT_MID` and `TO_MID` to yours. `TO_MID` is your mid.
+
+```
+% env LINE_CHANNEL_ID=XXXXXXXXX LINE_CHANNEL_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX LINE_BOT_MID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX TO_MID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX .build/debug/linebot
+```
+
+You will get a message from bot on LINE if you had setup setting on bot management page.
+
+> If you got an error `.build/debug/linebot: error while loading shared libraries: libCLibvenice.so: cannot open shared object file: No such file or directory`, add `.build/debug/` to your `LD_LIBRARY_PATH`.
+
+```
+% export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.build/debug/
+```
+
+# Start Server
+
+LINEBotAPI allows you to start server using `Zewo`.
+
+## main.swift
 
 Open `main.swift` and make it look like this:
 
 ```swift
+import LINEBotAPI
 import HTTPServer
 import Router
 import JSON
@@ -193,46 +259,70 @@ do {
                 for content in contents {
                     try handle(bot: bot, content: content)
                 }
-                return Response(status: Status.ok, headers: [:], body: Data("accepted"))
+                return Response(status: Status.ok, headers: [:], body: "accepted")
             }
             return Response(status: Status.forbidden)
         }
     }
 
+    // start server
     try Server(router).start()
 } catch let e {
     print(e)
 }
 ```
 
-and run it.
+Then build and run it.
 
 ```
-% env LINE_CHANNEL_ID=XXXXXXXXX LINE_CHANNEL_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX LINE_BOT_MID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX  TO_MID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX .build/debug/linebot
+% env LINE_CHANNEL_ID=XXXXXXXXX LINE_CHANNEL_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX LINE_BOT_MID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX .build/debug/linebot
 ```
 
-then start server on port 8080.
+The server will be started on port 8080.
 
-This server wait POST request from Bot Server on `/linebot/callback`.
+This server will be waiting a POST request from Bot Server at `/linebot/callback`.
 
-## Tips
+# Other examples
 
-### Can I develop on Xcode?
+## Send multiple messages
+
+```
+try bot.sendMultipleMessage { builder in
+    builder.addText(text: "Hello, bot!")
+    builder.addImage(
+        imageUrl: "http://www.example.com/some.jpg",
+        previewUrl: "http://www.example.com/some-thumb.jpg",
+    )
+}
+```
+
+## Send rich messages
+
+Not implemented yet.
+
+# Tips
+
+## Can I develop on Xcode?
 
 Yes, sure. You can generate a xcode project file with following command.
 
 ```
-% make xcode
-```
-or
-```
 % swift build -Xlinker -L/usr/local/lib -Xcc -I/usr/local/include -Xswiftc -I/usr/local/include -X
 ```
 
-### Can I use https server?
+## Can I use https server?
 
 Maybe. We are developing it using reverse proxy, but you must be able to support https because Zewo has `HTTPSServer`.
 
-## License
+# License
 
 LINEBotAPI is released under the MIT license. See LICENSE for details.
+
+[swift-badge]: https://img.shields.io/badge/Swift-3.0-orange.svg?style=flat
+[swift-url]: https://swift.org
+[platform-badge]: https://img.shields.io/badge/Platform-Mac%20%26%20Linux-lightgray.svg?style=flat
+[platform-url]: https://swift.org
+[mit-badge]: https://img.shields.io/badge/License-MIT-blue.svg?style=flat
+[mit-url]: https://tldrlegal.com/license/mit-license
+[linebot-badge]:https://img.shields.io/badge/Bot-LINE-brightgreen.svg?style=flat
+[linebot-url]:https://developers.line.me/bot-api/overview
