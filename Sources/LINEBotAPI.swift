@@ -8,7 +8,7 @@ public enum LINEBotAPIError: ErrorProtocol {
     case ContentNotFound
 }
 
-public typealias ContentHandler = (LINEBotAPI, JSON) throws -> Response
+public typealias ContentHandler = (LINEBotAPI, JSON) throws -> Void
 
 public class LINEBotAPI {
     private let client: APIClient
