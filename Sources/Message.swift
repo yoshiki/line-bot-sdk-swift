@@ -8,6 +8,7 @@ public enum ContentType: Int {
     case Location = 7
     case Sticker  = 8
     case Contact  = 10
+    case Rich     = 12
 }
 
 public protocol MessageType {

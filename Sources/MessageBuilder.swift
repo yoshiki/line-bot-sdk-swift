@@ -1,14 +1,12 @@
 import JSON
 
-public typealias MessageBuilderType = MessageBuilder -> Void
-
-public class MessageBuilder {
+public class MessageBuilder: Builder {
     public var contents: [JSON]
     public var content: JSON? {
         return contents[0]
     }
     
-    public init(contents: [JSON] = []) {
+    public required init(contents: [JSON] = []) {
         self.contents = contents
     }
 

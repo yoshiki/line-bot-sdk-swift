@@ -21,6 +21,8 @@ public struct MessageParser {
                 return StickerMessage(json: json)
             case .Contact:
                 return ContactMessage(json: json)
+            default:
+                return nil
             }
         } else {
             return nil

@@ -76,14 +76,16 @@ public class LINEBotAPI {
         return failureResponse
     }
 
-    private func send(to mid: [String], content: JSON) throws {
+    private func send(to mid: [String], eventType: EventType = .SendingMessage, content: JSON) throws {
         let to = JSON.from(mid.map(JSON.from))
         var newContent = content
-        newContent["toType"] = JSON.from(ToType.ToUser.rawValue)
+        if case .SendingMessage = eventType {
+            newContent["toType"] = JSON.from(ToType.ToUser.rawValue)
+        }
         let json = JSON.from([
             "to": to,
             "toChannel": JSON.from(BotAPISendingChannelId),
-            "eventType": JSON.from(EventType.SendingMessage.rawValue),
+            "eventType": JSON.from(eventType.rawValue),
             "content": newContent,
         ])
         try client.post(uri: "https://trialbot-api.line.me/v1/events", json: json)
@@ -139,27 +141,36 @@ public class LINEBotAPI {
 }
 
 extension LINEBotAPI {
-    public func send(to mid: [String], contents: [JSON]) throws {
-        guard contents.count != 0 else {
-            throw LINEBotAPIError.ContentNotFound
-        }
-        let to = JSON.from(mid.map(JSON.from))
-        let content = JSON.from([
-            "messageNotified": JSON.from(0),
-            "messages": JSON.from(contents),
-        ])
-        let json = JSON.from([
-            "to": to,
-            "toChannel": JSON.from(BotAPISendingChannelId),
-            "eventType": JSON.from(EventType.SendingMultipleMessage.rawValue),
-            "content": content,
-        ])
-        try client.post(uri: "https://trialbot-api.line.me/v1/events", json: json)
-    }
-
-    public func sendMultipleMessage(to mid: String..., f: MessageBuilderType) throws {
+    public func sendMultipleMessage(to mid: String..., f: BuilderType) throws {
         let builder = MessageBuilder()
         f(builder)
-        try send(to: mid, contents: builder.contents)
+
+        guard builder.contents.count != 0 else {
+            throw LINEBotAPIError.ContentNotFound
+        }
+
+        let content = JSON.from([
+            "messageNotified": JSON.from(0),
+            "messages": JSON.from(builder.contents),
+        ])
+        try send(to: mid, eventType: .SendingMultipleMessage, content: content)
+    }
+}
+
+extension LINEBotAPI {
+    public func sendRichMessage(to mid: String..., f: BuilderType) throws {
+        let builder = RichMessageBuilder()
+        f(builder)
+        
+        let content = JSON.from([
+            "contentType": JSON.from(ContentType.Rich.rawValue),
+            "contentMetadata": JSON.from([
+                "SPEC_REV": JSON.from(1),
+                "DOWNLOAD_URL": JSON.from(""),
+                "ALT_TEXT": JSON.from(""),
+                "MARKUP_JSON": builder.json,
+            ])
+        ])
+        try send(to: mid, eventType: .SendingMessage, content: content)
     }
 }
