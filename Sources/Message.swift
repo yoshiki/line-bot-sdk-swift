@@ -11,7 +11,7 @@ public enum ContentType: Int {
 }
 
 public protocol MessageType {
-    var json: JSON { get }
+    var json: JSON { get set }
     init(json: JSON)
 }
 
@@ -38,52 +38,49 @@ extension MessageType {
     }
 }
 
-public class Message: MessageType {
+public struct TextMessage: MessageType {
     public var json: JSON
-    public required init(json: JSON) {
+
+    public init(json: JSON) {
         self.json = json
     }
-
-    public static func initFromJSON(json: JSON) throws -> MessageType? {
-        let contentType = json.get(path: "content.contentType")
-                          .flatMap { return $0.int }
-                          .flatMap { ContentType(rawValue: $0) }
-        if let contentType = contentType {
-            switch contentType {
-            case .Text:
-                return TextMessage(json: json)
-            case .Image:
-                return ImageMessage(json: json)
-            case .Video:
-                return VideoMessage(json: json)
-            case .Audio:
-                return AudioMessage(json: json)
-            case .Location:
-                return LocationMessage(json: json)
-            case .Sticker:
-                return StickerMessage(json: json)
-            case .Contact:
-                return ContactMessage(json: json)
-            }
-        } else {
-            return nil
-        }
-    }
-}
-
-public class TextMessage: Message {
+    
     public var text: String? {
         return json.get(path: "content.text").flatMap{ $0.string }
     }
 }
 
-public class ImageMessage: Message {}
+public struct ImageMessage: MessageType {
+    public var json: JSON
 
-public class VideoMessage: Message {}
+    public init(json: JSON) {
+        self.json = json
+    }
+}
 
-public class AudioMessage: Message {}
+public struct VideoMessage: MessageType {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+}
 
-public class LocationMessage: Message {
+public struct AudioMessage: MessageType {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+}
+
+public struct LocationMessage: MessageType {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+    
     var title: String? {
         return json.get(path: "content.location.title").flatMap{ $0.string }
     }
@@ -98,7 +95,13 @@ public class LocationMessage: Message {
     }
 }
 
-public class StickerMessage: Message {
+public struct StickerMessage: MessageType {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+    
     var stkPkgId: String? {
         return json.get(path: "content.contentMetadata.STKPKGID").flatMap{ $0.string }
     }
@@ -113,7 +116,13 @@ public class StickerMessage: Message {
     }
 }
 
-public class ContactMessage: Message {
+public struct ContactMessage: MessageType {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+    
     var mid: String? {
         return json.get(path: "content.contentMetadata.mid").flatMap{ $0.string }
     }

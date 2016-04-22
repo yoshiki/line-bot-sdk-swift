@@ -1,11 +1,14 @@
 import JSON
 import OpenSSL
 import Base64
+import S4
 
 public enum LINEBotAPIError: ErrorProtocol {
     case ChannelInfoNotFound
     case ContentNotFound
 }
+
+public typealias ContentHandler = (LINEBotAPI, JSON) throws -> Response
 
 public class LINEBotAPI {
     private let client: APIClient
@@ -14,6 +17,8 @@ public class LINEBotAPI {
     public let channelId: String
     public let channelSecret: String
     public let channelMid: String
+    
+    public var failureResponse: Response = Response(status: .forbidden)
 
     public init() throws {
         guard let channelId = Env.getVar(name: "LINE_CHANNEL_ID"),
@@ -38,9 +43,37 @@ public class LINEBotAPI {
         let base64 = try Base64.encode(hashed)
         return (base64 == signature)
     }
+    
+    public func parseRequest(request: Request, handler: ContentHandler) throws -> Response {
+        var body: String = ""
+        if case .buffer(let data) = request.body {
+            body = String(data)
+        } else {
+            return failureResponse
+        }
 
-    public func parseMessage(json: JSON) throws -> MessageType? {
-        return try Message.initFromJSON(json: json)
+        // validate signature
+        guard let signature = request.headers["X-LINE-ChannelSignature"].first else {
+            return Response(status: .forbidden)
+        }
+        
+        let isValid = try validateSignature(
+            json: body,
+            channelSecret: channelSecret,
+            signature: signature
+        )
+
+        if isValid {
+            let json = try JSONParser().parse(data: Data(body))
+            if let result = json.get(path: "result") {
+                let contents = try result.asArray()
+                for content in contents {
+                    try handler(self, content)
+                }
+                return Response(status: .ok)
+            }
+        }
+        return failureResponse
     }
 
     private func send(to mid: [String], content: JSON) throws {
