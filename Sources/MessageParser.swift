@@ -1,7 +1,7 @@
 import JSON
 
 public struct MessageParser {
-    public static func parse(json: JSON) throws -> MessageType? {
+    public static func parse(_ json: JSON) throws -> MessageType? {
         let contentType = json.get(path: "content.contentType")
             .flatMap { return $0.int }
             .flatMap { ContentType(rawValue: $0) }

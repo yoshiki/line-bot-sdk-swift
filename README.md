@@ -150,9 +150,9 @@ Next, write main program in `main.swift`.
 import LINEBotAPI
 
 do {
-    if let to = getVar(name: "TO_MID") {
+    if let mid = getVar(name: "TO_MID") {
         let bot = try LINEBotAPI()
-        try bot.sendText(to: to, text: "Hello! Hello!")
+        try bot.sendText(to: mid, text: "Hello! Hello!")
     } else {
         print("set env TO_MID")
     }
@@ -214,54 +214,24 @@ Open `main.swift` and make it look like this:
 import LINEBotAPI
 import HTTPServer
 import Router
-import JSON
-import String
-
-func handle(bot: LINEBotAPI, content: JSON) throws {
-    if let message = try bot.parseMessage(json: content) {
-        if let to = message.fromMid {
-            try bot.sendText(to: to, text: "Hi! Hi!")
-        }
-    }
-}
 
 do {
     let bot = try LINEBotAPI()
+
+    // Initializer a router.
     let router = Router { (route) in
+        // Waiting for POST request on /linebot/callbak.
         route.post("/linebot/callback") { request -> Response in
-            // get body
-            var body: String = ""
-            if case .buffer(let data) = request.body {
-                body = String(data)
-            } else {
-                return Response(status: Status.forbidden)
-            }
-
-            // validate signature
-            guard let signature = request.headers["X-LINE-ChannelSignature"].first else {
-                return Response(status: Status.forbidden)
-            }
-
-            let isValid = try bot.validateSignature(
-                json: body,
-                channelSecret: bot.channelSecret,
-                signature: signature
-            )
-
-            if !isValid {
-                return Response(status: Status.forbidden)
-            }
-
-            // handle contents
-            let json = try JSONParser().parse(data: Data(body))
-            if let result = json.get(path: "result") {
-                let contents = try result.asArray()
-                for content in contents {
-                    try handle(bot: bot, content: content)
+            // Parsing request and validate signature.
+            return try bot.parseRequest(request) { content in
+                // Processing each message.
+                // The contents can be enqueued to external storages as you wish.
+                if let message = try MessageParser.parse(content) {
+                    if let mid = message.fromMid {
+                        try bot.sendText(to: mid, text: "Hi! Hi!")
+                    }
                 }
-                return Response(status: Status.ok, headers: [:], body: "accepted")
             }
-            return Response(status: Status.forbidden)
         }
     }
 

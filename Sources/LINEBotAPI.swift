@@ -8,7 +8,7 @@ public enum LINEBotAPIError: ErrorProtocol {
     case ContentNotFound
 }
 
-public typealias ContentHandler = (LINEBotAPI, JSON) throws -> Void
+public typealias ContentHandler = (JSON) throws -> Void
 
 public class LINEBotAPI {
     private let client: APIClient
@@ -38,13 +38,13 @@ public class LINEBotAPI {
         self.client = APIClient(headers: headers)
     }
 
-    public func validateSignature(json: String, channelSecret: String, signature: String) throws -> Bool {
-        let hashed = Hash.hmac(.SHA256, key: Data(channelSecret), message: Data(json))
+    public func validateSignature(message: String, channelSecret: String, signature: String) throws -> Bool {
+        let hashed = Hash.hmac(.SHA256, key: Data(channelSecret), message: Data(message))
         let base64 = try Base64.encode(hashed)
         return (base64 == signature)
     }
     
-    public func parseRequest(request: Request, handler: ContentHandler) throws -> Response {
+    public func parseRequest(_ request: Request, handler: ContentHandler) throws -> Response {
         var body: String = ""
         if case .buffer(let data) = request.body {
             body = String(data)
@@ -58,7 +58,7 @@ public class LINEBotAPI {
         }
         
         let isValid = try validateSignature(
-            json: body,
+            message: body,
             channelSecret: channelSecret,
             signature: signature
         )
@@ -68,7 +68,7 @@ public class LINEBotAPI {
             if let result = json.get(path: "result") {
                 let contents = try result.asArray()
                 for content in contents {
-                    try handler(self, content)
+                    try handler(content)
                 }
                 return Response(status: .ok)
             }
