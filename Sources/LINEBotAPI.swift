@@ -1,9 +1,3 @@
-#if os(Linux)
-import Glibc
-#else
-import Darwin
-#endif
-
 import JSON
 import OpenSSL
 import Base64
@@ -11,14 +5,6 @@ import Base64
 public enum LINEBotAPIError: ErrorProtocol {
     case ChannelInfoNotFound
     case ContentNotFound
-}
-
-func getVar(name: String) -> String? {
-    if let out = getenv(name) {
-        return String(validatingUTF8: out)
-    } else {
-        return nil
-    }
 }
 
 public class LINEBotAPI {
@@ -30,9 +16,9 @@ public class LINEBotAPI {
     public let channelMid: String
 
     public init() throws {
-        guard let channelId = getVar(name: "LINE_CHANNEL_ID"),
-            channelSecret = getVar(name: "LINE_CHANNEL_SECRET"),
-            channelMid = getVar(name: "LINE_BOT_MID") else {
+        guard let channelId = Env.getVar(name: "LINE_CHANNEL_ID"),
+            channelSecret = Env.getVar(name: "LINE_CHANNEL_SECRET"),
+            channelMid = Env.getVar(name: "LINE_BOT_MID") else {
             throw LINEBotAPIError.ChannelInfoNotFound
         }
         self.headers = [

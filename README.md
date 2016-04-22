@@ -108,7 +108,7 @@ Let's create your LINE Bot!
 Set Swift version to `DEVELOPMENT-SNAPSHOT-2016-04-12-a`.
 
 ```
-% swift local DEVELOPMENT-SNAPSHOT-2016-04-12-a
+% swiftenv local DEVELOPMENT-SNAPSHOT-2016-04-12-a
 ```
 
 Initialize project directory with swift package manager(**SPM**).
