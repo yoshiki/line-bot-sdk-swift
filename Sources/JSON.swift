@@ -15,8 +15,4 @@ extension JSON {
         }
         return json
     }
-    
-    public func toString() -> String {
-        return JSONSerializer().serializeToString(json: self)
-    }
 }

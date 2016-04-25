@@ -170,7 +170,7 @@ extension LINEBotAPI {
         contentMetadata["SPEC_REV"] = JSON.from("1") // Fixed 1
         contentMetadata["DOWNLOAD_URL"] = JSON.from(imageUrl)
         contentMetadata["ALT_TEXT"] = JSON.from(altText)
-        contentMetadata["MARKUP_JSON"] = JSON.from(_escapeAsJSON(markupJSON.toString()))
+        contentMetadata["MARKUP_JSON"] = JSON.from(_escapeAsJSON(markupJSON.description))
         let content = JSON.from([
             "contentType": JSON.from(ContentType.Rich.rawValue),
             "contentMetadata": contentMetadata,
