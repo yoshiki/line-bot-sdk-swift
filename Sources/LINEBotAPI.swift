@@ -94,7 +94,7 @@ public class LINEBotAPI {
     public func sendText(to mid: String..., text: String) throws {
         let builder = MessageBuilder()
         builder.addText(text: text)
-        if let content = builder.content {
+        if let content = try builder.build() {
             try send(to: mid, content: content)
         }
     }
@@ -102,7 +102,7 @@ public class LINEBotAPI {
     public func sendImage(to mid: String..., imageUrl: String, previewUrl: String) throws {
         let builder = MessageBuilder()
         builder.addImage(imageUrl: imageUrl, previewUrl: previewUrl)
-        if let content = builder.content {
+        if let content = try builder.build() {
             try send(to: mid, content: content)
         }
     }
@@ -110,7 +110,7 @@ public class LINEBotAPI {
     public func sendVideo(to mid: String..., videoUrl: String, previewUrl: String) throws {
         let builder = MessageBuilder()
         builder.addVideo(videoUrl: videoUrl, previewUrl: previewUrl)
-        if let content = builder.content {
+        if let content = try builder.build() {
             try send(to: mid, content: content)
         }
     }
@@ -118,7 +118,7 @@ public class LINEBotAPI {
     public func sendAudio(to mid: String..., audioUrl: String, duration: Int) throws {
         let builder = MessageBuilder()
         builder.addAudio(audioUrl: audioUrl, duration: duration)
-        if let content = builder.content {
+        if let content = try builder.build() {
             try send(to: mid, content: content)
         }
     }
@@ -126,7 +126,7 @@ public class LINEBotAPI {
     public func sendLocation(to mid: String..., text: String, address: String, latitude: String, longitude: String) throws {
         let builder = MessageBuilder()
         builder.addLocation(text: text, address: address, latitude: latitude, longitude: longitude)
-        if let content = builder.content {
+        if let content = try builder.build() {
             try send(to: mid, content: content)
         }
     }
@@ -134,7 +134,7 @@ public class LINEBotAPI {
     public func sendSticker(to mid: String..., stkId: String, stkPkgId: String, stkVer: String) throws {
         let builder = MessageBuilder()
         builder.addSticker(stkId: stkId, stkPkgId: stkPkgId, stkVer: stkVer)
-        if let content = builder.content {
+        if let content = try builder.build() {
             try send(to: mid, content: content)
         }
     }
@@ -145,31 +145,31 @@ extension LINEBotAPI {
         let builder = MessageBuilder()
         f(builder)
 
-        guard builder.contents.count != 0 else {
+        guard let contents = try builder.build(), arr = contents.array where arr.count > 0 else {
             throw LINEBotAPIError.ContentNotFound
         }
-
+        
         let content = JSON.from([
             "messageNotified": JSON.from(0),
-            "messages": JSON.from(builder.contents),
+            "messages": contents,
         ])
         try send(to: mid, eventType: .SendingMultipleMessage, content: content)
     }
 }
 
 extension LINEBotAPI {
-    public func sendRichMessage(to mid: String..., f: BuilderType) throws {
+    public func sendRichMessage(to mid: String..., imageUrl: String, altText: String, f: BuilderType) throws {
         let builder = RichMessageBuilder()
         f(builder)
         
+        var contentMetadata = JSON.from([])
+        contentMetadata["SPEC_REV"] = JSON.from("1") // Fixed 1
+        contentMetadata["DOWNLOAD_URL"] = JSON.from(imageUrl)
+        contentMetadata["ALT_TEXT"] = JSON.from(altText)
+        contentMetadata["MARKUP_JSON"] = try builder.build()
         let content = JSON.from([
             "contentType": JSON.from(ContentType.Rich.rawValue),
-            "contentMetadata": JSON.from([
-                "SPEC_REV": JSON.from(1),
-                "DOWNLOAD_URL": JSON.from(""),
-                "ALT_TEXT": JSON.from(""),
-                "MARKUP_JSON": builder.json,
-            ])
+            "contentMetadata": contentMetadata
         ])
         try send(to: mid, eventType: .SendingMessage, content: content)
     }

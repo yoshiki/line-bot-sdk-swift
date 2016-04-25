@@ -1,8 +1,11 @@
 import JSON
 
+public enum BuilderError: ErrorProtocol {
+    case BuildFailed, ContentsNotFound
+}
+
 public typealias BuilderType = Builder -> Void
 
 public protocol Builder {
-    var contents: [JSON] { get set }
-    init(contents: [JSON])
+    func build() throws -> JSON?
 }

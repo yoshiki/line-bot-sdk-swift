@@ -1,13 +1,13 @@
 import JSON
 
 public class MessageBuilder: Builder {
-    public var contents: [JSON]
-    public var content: JSON? {
-        return contents[0]
-    }
+    private var contents = [JSON]()
     
-    public required init(contents: [JSON] = []) {
-        self.contents = contents
+    public func build() throws -> JSON? {
+        guard contents.count > 0 else {
+            throw BuilderError.ContentsNotFound
+        }
+        return contents[0]
     }
 
     public func addText(text: String) {

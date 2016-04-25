@@ -76,52 +76,66 @@ public struct RichMessageListener {
 }
 
 public class RichMessageBuilder: Builder {
-    public var contents: [JSON]
-
     private var listeners = [RichMessageListener]()
     private var actions = [RichMessageAction]()
-
-    public required init(contents: [JSON] = []) {
-        self.contents = contents
-    }
     
+    private var jsonListeners: JSON {
+        return JSON.from(listeners.map { $0.json })
+    }
+    private var jsonActions: JSON {
+        return JSON.from(actions.map { $0.json })
+    }
+
     public func addListener(listener: RichMessageListener) {
         listeners.append(listener)
         actions.append(listener.action)
     }
     
-    public var json: JSON {
-        let canvas = JSON.from([
-            "width": JSON.from(1040), // Fixed 1040
-            "height": JSON.from(1040), // Max value is 2080
-            "initialScene": JSON.from("scene1"),
-        ])
+    public func build() throws -> JSON? {
+        guard listeners.count > 0 && actions.count > 0 else {
+            throw BuilderError.BuildFailed
+        }
+        
+        // construct canvas
+        var canvas = JSON.from([])
+        canvas["width"] = JSON.from(1040)  // Fixed 1040
+        canvas["height"] = JSON.from(1040)  // Max value is 2080
+        canvas["initialScene"] = JSON.from("scene1")
+        
+        // construct images
+        var image1 = JSON.from([])
+        image1["x"] = JSON.from(0) // Fixed 0
+        image1["y"] = JSON.from(0) // Fixed 0
+        image1["w"] = JSON.from(1040) // Fixed 1040
+        image1["h"] = JSON.from(1040) // Max value is 2080
         let images = JSON.from([
-            "image1": JSON.from([
-                "x": JSON.from(0), // Fixed 0
-                "y": JSON.from(0), // Fixed 0
-                "w": JSON.from(1040), // Fixed 1040
-                "h": JSON.from(1040), // Max value is 2080
+            "images": JSON.from([
+                "image1": image1
             ])
         ])
-        let draw = JSON.from([
-            "image": JSON.from("image1"),
-            "x": JSON.from(0), // Fixed 0
-            "y": JSON.from(0), // Fixed 0
-            "w": JSON.from(1040), // Fixed 1040
-            "h": JSON.from(1040), // Max value is 2080
-        ])
+
+        // construct draws
+        var draw = JSON.from([])
+        draw["image"] = JSON.from("image1")
+        draw["x"] = JSON.from(0)
+        draw["y"] = JSON.from(0)
+        draw["w"] = JSON.from(1040)
+        draw["h"] = JSON.from(1040)
         let draws = JSON.from([ draw ])
+
+        // construct scenes
         let scenes = JSON.from([
             "scene1": JSON.from([
                 "draws": draws,
-                "listeners": JSON.from(1)
+                "listeners": jsonListeners,
             ])
         ])
+
+        // return rich message
         return JSON.from([
             "canvas": canvas,
             "images": images,
-            "actions": JSON.from(1),
+            "actions": jsonActions,
             "scenes": scenes,
         ])
     }
