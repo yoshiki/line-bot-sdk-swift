@@ -97,13 +97,13 @@ public class RichMessageBuilder: Builder {
         }
         
         // construct canvas
-        var canvas = JSON.from([])
+        var canvas = JSON.from([:])
         canvas["width"] = JSON.from(1040)  // Fixed 1040
         canvas["height"] = JSON.from(1040)  // Max value is 2080
         canvas["initialScene"] = JSON.from("scene1")
         
         // construct images
-        var image1 = JSON.from([])
+        var image1 = JSON.from([:])
         image1["x"] = JSON.from(0) // Fixed 0
         image1["y"] = JSON.from(0) // Fixed 0
         image1["w"] = JSON.from(1040) // Fixed 1040
@@ -115,7 +115,7 @@ public class RichMessageBuilder: Builder {
         ])
 
         // construct draws
-        var draw = JSON.from([])
+        var draw = JSON.from([:])
         draw["image"] = JSON.from("image1")
         draw["x"] = JSON.from(0)
         draw["y"] = JSON.from(0)

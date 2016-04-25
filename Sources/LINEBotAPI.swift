@@ -162,7 +162,7 @@ extension LINEBotAPI {
         let builder = RichMessageBuilder()
         f(builder)
         
-        var contentMetadata = JSON.from([])
+        var contentMetadata = JSON.from([:])
         contentMetadata["SPEC_REV"] = JSON.from("1") // Fixed 1
         contentMetadata["DOWNLOAD_URL"] = JSON.from(imageUrl)
         contentMetadata["ALT_TEXT"] = JSON.from(altText)
