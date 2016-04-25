@@ -19,4 +19,10 @@ extension JSON {
     public func toString() -> String {
         return JSONSerializer().serializeToString(json: self)
     }
+    
+    public func escapeToString() -> String {
+        var str = toString()
+        str.replace(string: "\"", with: "\\\"")
+        return str
+    }
 }

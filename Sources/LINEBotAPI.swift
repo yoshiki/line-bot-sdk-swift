@@ -169,7 +169,7 @@ extension LINEBotAPI {
         contentMetadata["MARKUP_JSON"] = try builder.build()
         let content = JSON.from([
             "contentType": JSON.from(ContentType.Rich.rawValue),
-            "contentMetadata": contentMetadata
+            "contentMetadata": contentMetadata.escapeToString(),
         ])
         try send(to: mid, eventType: .SendingMessage, content: content)
     }
