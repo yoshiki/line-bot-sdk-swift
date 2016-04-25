@@ -37,10 +37,10 @@ public struct RichMessageAction {
     let name: String
     let linkUri: String
     
-    public init(type: RichMessageActionType = .Web, text: String, name: String, linkUri: String) {
+    public init(type: RichMessageActionType = .Web, name: String, text: String, linkUri: String) {
         self.type = type
-        self.text = text
         self.name = name
+        self.text = text
         self.linkUri = linkUri
     }
     
