@@ -162,14 +162,18 @@ extension LINEBotAPI {
         let builder = RichMessageBuilder()
         f(builder)
         
+        guard let markupJSON = try builder.build() else {
+            throw LINEBotAPIError.ContentNotFound
+        }
+        
         var contentMetadata = JSON.from([:])
         contentMetadata["SPEC_REV"] = JSON.from("1") // Fixed 1
         contentMetadata["DOWNLOAD_URL"] = JSON.from(imageUrl)
         contentMetadata["ALT_TEXT"] = JSON.from(altText)
-        contentMetadata["MARKUP_JSON"] = try builder.build()
+        contentMetadata["MARKUP_JSON"] = JSON.from(escapeAsJSON(markupJSON.toString()))
         let content = JSON.from([
             "contentType": JSON.from(ContentType.Rich.rawValue),
-            "contentMetadata": contentMetadata.escape(),
+            "contentMetadata": contentMetadata,
         ])
         try send(to: mid, eventType: .SendingMessage, content: content)
     }
