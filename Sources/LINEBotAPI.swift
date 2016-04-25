@@ -141,12 +141,13 @@ public class LINEBotAPI {
 }
 
 extension LINEBotAPI {
-    public func sendMultipleMessage(to mid: String..., f: BuilderType) throws {
+    public typealias MessageBuild = MessageBuilder -> Void
+    public func sendMultipleMessage(to mid: String..., construct: MessageBuild) throws {
         let builder = MessageBuilder()
-        f(builder)
+        construct(builder)
 
         guard let contents = try builder.build(), arr = contents.array where arr.count > 0 else {
-            throw LINEBotAPIError.ContentNotFound
+            throw BuilderError.ContentsNotFound
         }
         
         let content = JSON.from([
@@ -158,12 +159,13 @@ extension LINEBotAPI {
 }
 
 extension LINEBotAPI {
-    public func sendRichMessage(to mid: String..., imageUrl: String, altText: String, f: BuilderType) throws {
-        let builder = RichMessageBuilder()
-        f(builder)
+    public typealias RichMessageBuild = RichMessageBuilder -> Void
+    public func sendRichMessage(to mid: String..., imageUrl: String, height: Int = 1040, altText: String, construct: RichMessageBuild) throws {
+        let builder = try RichMessageBuilder(height: height)
+        construct(builder)
         
         guard let markupJSON = try builder.build() else {
-            throw LINEBotAPIError.ContentNotFound
+            throw BuilderError.ContentsNotFound
         }
         
         var contentMetadata = JSON.from([:])

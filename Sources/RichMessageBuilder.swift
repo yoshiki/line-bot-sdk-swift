@@ -74,9 +74,17 @@ public struct RichMessageListener {
 }
 
 public class RichMessageBuilder: Builder {
+    private let height: Int
     private var listeners = [RichMessageListener]()
     private var actions = [RichMessageAction]()
     
+    public init(height: Int = 1040) throws {
+        guard height < 2080 else {
+            throw BuilderError.InvalidHeight
+        }
+        self.height = height
+    }
+
     private var jsonListeners: JSON {
         return JSON.from(listeners.map { $0.json })
     }
@@ -99,7 +107,7 @@ public class RichMessageBuilder: Builder {
         // construct canvas
         var canvas = JSON.from([:])
         canvas["width"] = JSON.from(1040)  // Fixed 1040
-        canvas["height"] = JSON.from(1040)  // Max value is 2080
+        canvas["height"] = JSON.from(height)  // Max value is 2080
         canvas["initialScene"] = JSON.from("scene1")
         
         // construct images
@@ -107,7 +115,7 @@ public class RichMessageBuilder: Builder {
         image1["x"] = JSON.from(0) // Fixed 0
         image1["y"] = JSON.from(0) // Fixed 0
         image1["w"] = JSON.from(1040) // Fixed 1040
-        image1["h"] = JSON.from(1040) // Max value is 2080
+        image1["h"] = JSON.from(height) // Max value is 2080
         let images = JSON.from([
             "image1": image1
         ])
@@ -115,10 +123,10 @@ public class RichMessageBuilder: Builder {
         // construct draws
         var draw = JSON.from([:])
         draw["image"] = JSON.from("image1")
-        draw["x"] = JSON.from(0)
-        draw["y"] = JSON.from(0)
-        draw["w"] = JSON.from(1040)
-        draw["h"] = JSON.from(1040)
+        draw["x"] = JSON.from(0) // Fixed 0
+        draw["y"] = JSON.from(0) // Fixed 0
+        draw["w"] = JSON.from(1040) // Any one of 1040, 700, 460, 300, 240. This value must be same as the image width.
+        draw["h"] = JSON.from(height) // Max value is 2080
         let draws = JSON.from([ draw ])
 
         // construct scenes
