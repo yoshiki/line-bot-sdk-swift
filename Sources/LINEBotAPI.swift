@@ -170,7 +170,7 @@ extension LINEBotAPI {
         contentMetadata["SPEC_REV"] = JSON.from("1") // Fixed 1
         contentMetadata["DOWNLOAD_URL"] = JSON.from(imageUrl)
         contentMetadata["ALT_TEXT"] = JSON.from(altText)
-        contentMetadata["MARKUP_JSON"] = JSON.from(_escapeAsJSON(markupJSON.description))
+        contentMetadata["MARKUP_JSON"] = JSON.from(markupJSON.description)
         let content = JSON.from([
             "contentType": JSON.from(ContentType.Rich.rawValue),
             "contentMetadata": contentMetadata,
@@ -178,28 +178,3 @@ extension LINEBotAPI {
         try send(to: mid, eventType: .SendingMessage, content: content)
     }
 }
-
-func _escapeAsJSON(_ source : String) -> String {
-    var s = ""
-    for c in source.characters {
-        if let escapedSymbol = _escapeMapping[c] {
-            s.append(escapedSymbol)
-        } else {
-            s.append(c)
-        }
-    }
-    return s
-}
-
-let _escapeMapping: [Character: String] = [
-    "\r": "\\r",
-    "\n": "\\n",
-    "\t": "\\t",
-    "\\": "\\\\",
-    "\"": "\\\"",
-    
-    "\u{2028}": "\\u2028",
-    "\u{2029}": "\\u2029",
-    
-    "\r\n": "\\r\\n"
-]
