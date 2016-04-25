@@ -109,9 +109,7 @@ public class RichMessageBuilder: Builder {
         image1["w"] = JSON.from(1040) // Fixed 1040
         image1["h"] = JSON.from(1040) // Max value is 2080
         let images = JSON.from([
-            "images": JSON.from([
-                "image1": image1
-            ])
+            "image1": image1
         ])
 
         // construct draws
