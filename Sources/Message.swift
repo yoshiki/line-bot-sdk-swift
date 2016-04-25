@@ -1,6 +1,6 @@
 import JSON
 
-public enum ContentType: Int {
+public enum MessageContentType: Int {
     case Text     = 1
     case Image    = 2
     case Video    = 3
@@ -11,35 +11,33 @@ public enum ContentType: Int {
     case Rich     = 12
 }
 
-public protocol MessageType {
-    var json: JSON { get set }
-    init(json: JSON)
-}
+public protocol Message: Content {}
 
-extension MessageType {
+extension Message {
     public var contentId: String? {
         return self["content.id"].flatMap { $0.string }
     }
-
-    public var contentType: ContentType? {
-        return self["content.contentType"].flatMap { $0.int }
-          .flatMap { ContentType(rawValue: $0) }
+    
+    public var contentType: MessageContentType? {
+        return self["content.contentType"]
+            .flatMap { $0.int }
+            .flatMap { MessageContentType(rawValue: $0) }
     }
-
+    
     public var createTime: String? {
         return self["content.createdTime"].flatMap { $0.string }
     }
-
+    
     public var fromMid: String? {
         return self["content.from"].flatMap { $0.string }
     }
-
+    
     public subscript(path: String) -> JSON? {
         return json.get(path: path)
     }
 }
 
-public struct TextMessage: MessageType {
+public struct TextMessage: Message {
     public var json: JSON
 
     public init(json: JSON) {
@@ -51,7 +49,7 @@ public struct TextMessage: MessageType {
     }
 }
 
-public struct ImageMessage: MessageType {
+public struct ImageMessage: Message {
     public var json: JSON
 
     public init(json: JSON) {
@@ -59,15 +57,7 @@ public struct ImageMessage: MessageType {
     }
 }
 
-public struct VideoMessage: MessageType {
-    public var json: JSON
-    
-    public init(json: JSON) {
-        self.json = json
-    }
-}
-
-public struct AudioMessage: MessageType {
+public struct VideoMessage: Message {
     public var json: JSON
     
     public init(json: JSON) {
@@ -75,7 +65,15 @@ public struct AudioMessage: MessageType {
     }
 }
 
-public struct LocationMessage: MessageType {
+public struct AudioMessage: Message {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+}
+
+public struct LocationMessage: Message {
     public var json: JSON
     
     public init(json: JSON) {
@@ -96,7 +94,7 @@ public struct LocationMessage: MessageType {
     }
 }
 
-public struct StickerMessage: MessageType {
+public struct StickerMessage: Message {
     public var json: JSON
     
     public init(json: JSON) {
@@ -117,7 +115,7 @@ public struct StickerMessage: MessageType {
     }
 }
 
-public struct ContactMessage: MessageType {
+public struct ContactMessage: Message {
     public var json: JSON
     
     public init(json: JSON) {

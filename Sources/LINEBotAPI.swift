@@ -174,7 +174,7 @@ extension LINEBotAPI {
         contentMetadata["ALT_TEXT"] = JSON.from(altText)
         contentMetadata["MARKUP_JSON"] = JSON.from(markupJSON.description)
         let content = JSON.from([
-            "contentType": JSON.from(ContentType.Rich.rawValue),
+            "contentType": JSON.from(MessageContentType.Rich.rawValue),
             "contentMetadata": contentMetadata,
         ])
         try send(to: mid, eventType: .SendingMessage, content: content)
