@@ -10,14 +10,14 @@
 **LINEBotAPI** is a SDK of the LINE BOT API Trial for Swift.
 
 - Swift 3 support
-- Use [Zewo](https://github.com/Zewo/Zewo)
+- Using [Zewo](https://github.com/Zewo/Zewo)
 - Linux Ready
 
 ## Features
 
 - [x] Send text/image/video/audio/location/sticker message
 - [x] Send multiple messages
-- [ ] Send rich message
+- [x] Send rich message
 - [ ] Handling of received operation(add as friend or blocked)
 
 ## A Work In progress
@@ -256,7 +256,7 @@ This server will be waiting a POST request from Bot Server at `/linebot/callback
 
 ## Send multiple messages
 
-```
+```swift
 try bot.sendMultipleMessage { builder in
     builder.addText(text: "Hello, bot!")
     builder.addImage(
@@ -268,7 +268,25 @@ try bot.sendMultipleMessage { builder in
 
 ## Send rich messages
 
-Not implemented yet.
+```swift
+try bot.sendRichMessage(to: mid, imageUrl: "http://example.com/images", altText: "Text for low-level devices") { (builder) in
+    let action0 = RichMessageAction(name: "openHomepage", text: "Open Homepage", linkUri: "http://example.com/homepage")
+    let listener0 = RichMessageListener(bounds: Bounds(x: 0, y: 0, width: 1040, height: 520), action: action0)
+    builder.addListener(listener: listener0)
+
+    let action1 = RichMessageAction(name: "showItem", text: "Show Item", linkUri: "http://example.com/showItem")
+    let listener1 = RichMessageListener(bounds: Bounds(x: 0, y: 520, width: 520, height: 520), action: action1)
+    builder.addListener(listener: listener1)
+
+    let action2 = RichMessageAction(name: "search", text: "Search", linkUri: "http://example.com/search")
+    let listener2 = RichMessageListener(bounds: Bounds(x: 520, y: 520, width: 520, height: 520), action: action2)
+    builder.addListener(listener: listener2)
+}
+```
+
+`imageUrl` must serve images of some size(For more information, see [official docs](https://developers.line.me/bot-api/api-reference#sending_rich_content_message_prerequisite)).
+
+`width` must be 1040px for `Bounds()` and a maximum size of `height` must be less than 2080px.
 
 # Tips
 
