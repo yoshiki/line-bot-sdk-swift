@@ -46,11 +46,9 @@ public struct RichMessageAction {
     
     public var json: JSON {
         return JSON.from([
-            name: JSON.from([
-                "type": JSON.from(type.rawValue),
-                "text": JSON.from(text),
-                "params": JSON.from([ "linkUri": JSON.from(linkUri) ])
-            ])
+            "type": JSON.from(type.rawValue),
+            "text": JSON.from(text),
+            "params": JSON.from([ "linkUri": JSON.from(linkUri) ])
         ])
     }
 }
@@ -83,7 +81,9 @@ public class RichMessageBuilder: Builder {
         return JSON.from(listeners.map { $0.json })
     }
     private var jsonActions: JSON {
-        return JSON.from(actions.map { $0.json })
+        var dic = [String:JSON]()
+        actions.forEach { dic[$0.name] = $0.json }
+        return JSON.from(dic)
     }
 
     public func addListener(listener: RichMessageListener) {
