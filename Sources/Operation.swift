@@ -8,7 +8,7 @@ public enum OpType: Int {
 public protocol Operation: Content {}
 
 extension Operation {
-    public var mid: String? {
+    public var fromMid: String? {
         return self["content.params"]
             .flatMap { $0[0] }
             .flatMap { $0.string }
