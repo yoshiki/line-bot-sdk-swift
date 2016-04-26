@@ -1,9 +1,9 @@
 import JSON
 
 public struct MessageParser {
-    public static func parse(_ json: JSON) throws -> MessageType? {
+    public static func parse(_ json: JSON) throws -> Content? {
         let contentType = json.get(path: "content.contentType")
-            .flatMap { return $0.int }
+            .flatMap { $0.int }
             .flatMap { ContentType(rawValue: $0) }
         if let contentType = contentType {
             switch contentType {

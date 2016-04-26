@@ -75,7 +75,9 @@ public class LINEBotAPI {
         }
         return failureResponse
     }
+}
 
+extension LINEBotAPI {
     private func send(to mid: [String], eventType: EventType = .SendingMessage, content: JSON) throws {
         let to = JSON.from(mid.map(JSON.from))
         var newContent = content
