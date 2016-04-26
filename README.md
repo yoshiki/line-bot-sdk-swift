@@ -18,7 +18,7 @@
 - [x] Send text/image/video/audio/location/sticker message
 - [x] Send multiple messages
 - [x] Send rich message
-- [ ] Handling of received operation(add as friend or blocked)
+- [x] Handle received operation(add as friend or blocked)
 
 ## A Work In progress
 
@@ -220,15 +220,22 @@ do {
 
     // Initializer a router.
     let router = Router { (route) in
-        // Waiting for POST request on /linebot/callbak.
+        // Waiting for POST request on /linebot/callback.
         route.post("/linebot/callback") { request -> Response in
             // Parsing request and validate signature.
             return try bot.parseRequest(request) { content in
-                // Processing each message.
+                // Processing each messages or operations.
                 // The contents can be enqueued to external storages as you wish.
-                if let message = try MessageParser.parse(content) {
-                    if let mid = message.fromMid {
+                if let content = try ContentParser.parse(content) {
+                    if let message = content as? TextMessage,
+                        mid = message.fromMid {
+                        // send text if content is a message.
                         try bot.sendText(to: mid, text: "Hi! Hi!")
+                    } else if let op = content as? Operation,
+                        mid = op.fromMid,
+                        type = op.opType where type = .Added {
+                        // send text if content is a operation to add.
+                        try bot.sendText(to; mid, text: "Thanks to add as friend")
                     }
                 }
             }
