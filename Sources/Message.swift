@@ -1,6 +1,6 @@
 import JSON
 
-public enum MessageContentType: Int {
+public enum ContentType: Int {
     case Text     = 1
     case Image    = 2
     case Video    = 3
@@ -18,10 +18,10 @@ extension Message {
         return self["content.id"].flatMap { $0.string }
     }
     
-    public var contentType: MessageContentType? {
+    public var contentType: ContentType? {
         return self["content.contentType"]
             .flatMap { $0.int }
-            .flatMap { MessageContentType(rawValue: $0) }
+            .flatMap { ContentType(rawValue: $0) }
     }
     
     public var createTime: String? {
@@ -31,15 +31,11 @@ extension Message {
     public var fromMid: String? {
         return self["content.from"].flatMap { $0.string }
     }
-    
-    public subscript(path: String) -> JSON? {
-        return json.get(path: path)
-    }
 }
 
 public struct TextMessage: Message {
     public var json: JSON
-
+    
     public init(json: JSON) {
         self.json = json
     }

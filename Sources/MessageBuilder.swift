@@ -12,7 +12,7 @@ public class MessageBuilder: Builder {
 
     public func addText(text: String) {
         let content = JSON.from([
-            "contentType": JSON.from(MessageContentType.Text.rawValue),
+            "contentType": JSON.from(ContentType.Text.rawValue),
             "text": JSON.from(text),
         ])
         contents.append(content)
@@ -20,7 +20,7 @@ public class MessageBuilder: Builder {
     
     public func addImage(imageUrl: String, previewUrl: String) {
         let content = JSON.from([
-            "contentType": JSON.from(MessageContentType.Image.rawValue),
+            "contentType": JSON.from(ContentType.Image.rawValue),
             "originalContentUrl": JSON.from(imageUrl),
             "previewImageUrl": JSON.from(previewUrl),
         ])
@@ -29,7 +29,7 @@ public class MessageBuilder: Builder {
 
     public func addVideo(videoUrl: String, previewUrl: String) {
         let content = JSON.from([
-            "contentType": JSON.from(MessageContentType.Video.rawValue),
+            "contentType": JSON.from(ContentType.Video.rawValue),
             "originalContentUrl": JSON.from(videoUrl),
             "previewImageUrl": JSON.from(previewUrl),
         ])
@@ -39,7 +39,7 @@ public class MessageBuilder: Builder {
     public func addAudio(audioUrl: String, duration: Int) {
         let metaData = JSON.from([ "AUDLEN": "\(duration)" ])
         let content = JSON.from([
-            "contentType": JSON.from(MessageContentType.Audio.rawValue),
+            "contentType": JSON.from(ContentType.Audio.rawValue),
             "originalContentUrl": JSON.from(audioUrl),
             "contentMetadata": metaData,
         ])
@@ -53,7 +53,7 @@ public class MessageBuilder: Builder {
             "longitude": JSON.from(longitude),
         ])
         let content = JSON.from([
-            "contentType": JSON.from(MessageContentType.Location.rawValue),
+            "contentType": JSON.from(ContentType.Location.rawValue),
             "text": JSON.from(text),
             "location": location,
         ])
@@ -67,7 +67,7 @@ public class MessageBuilder: Builder {
             "STKVER": JSON.from(stkVer),
         ])
         let content = JSON.from([
-            "contentType": JSON.from(MessageContentType.Sticker.rawValue),
+            "contentType": JSON.from(ContentType.Sticker.rawValue),
             "contentMetadata": metaData,
         ])
         contents.append(content)

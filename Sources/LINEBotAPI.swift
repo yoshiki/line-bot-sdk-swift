@@ -75,7 +75,9 @@ public class LINEBotAPI {
         }
         return failureResponse
     }
+}
 
+extension LINEBotAPI {
     private func send(to mid: [String], eventType: EventType = .SendingMessage, content: JSON) throws {
         let to = JSON.from(mid.map(JSON.from))
         var newContent = content
@@ -174,7 +176,7 @@ extension LINEBotAPI {
         contentMetadata["ALT_TEXT"] = JSON.from(altText)
         contentMetadata["MARKUP_JSON"] = JSON.from(markupJSON.description)
         let content = JSON.from([
-            "contentType": JSON.from(MessageContentType.Rich.rawValue),
+            "contentType": JSON.from(ContentType.Rich.rawValue),
             "contentMetadata": contentMetadata,
         ])
         try send(to: mid, eventType: .SendingMessage, content: content)

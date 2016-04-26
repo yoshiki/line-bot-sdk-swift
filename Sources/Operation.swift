@@ -23,10 +23,6 @@ extension Operation {
     public var revision: Int? {
         return self["content.revision"].flatMap { $0.int }
     }
-
-    public subscript(path: String) -> JSON? {
-        return json.get(path: path)
-    }
 }
 
 public struct AddOperation: Operation {
