@@ -1,17 +1,17 @@
 import JSON
 import OpenSSL
 import Base64
-import S4
+import HTTP
 
-public enum LINEBotAPIError: ErrorProtocol {
+public enum LINEBotAPIError: Error {
     case ChannelInfoNotFound
     case ContentNotFound
 }
 
-public typealias ContentHandler = (JSON) throws -> Void
-
 public class LINEBotAPI {
-    private let client: APIClient
+    private typealias ContentHandler = (C7.JSON) throws -> Void
+    
+    internal let client: Client
     private let headers: Headers
     
     public let channelId: String
@@ -22,8 +22,8 @@ public class LINEBotAPI {
 
     public init() throws {
         guard let channelId = Env.getVar(name: "LINE_CHANNEL_ID"),
-            channelSecret = Env.getVar(name: "LINE_CHANNEL_SECRET"),
-            channelMid = Env.getVar(name: "LINE_BOT_MID") else {
+            let channelSecret = Env.getVar(name: "LINE_CHANNEL_SECRET"),
+            let channelMid = Env.getVar(name: "LINE_BOT_MID") else {
             throw LINEBotAPIError.ChannelInfoNotFound
         }
         self.headers = [
@@ -35,25 +35,25 @@ public class LINEBotAPI {
         self.channelId = channelId
         self.channelSecret = channelSecret
         self.channelMid = channelMid
-        self.client = APIClient(headers: headers)
+        self.client = Client(headers: headers)
     }
 
     public func validateSignature(message: String, channelSecret: String, signature: String) throws -> Bool {
-        let hashed = Hash.hmac(.SHA256, key: Data(channelSecret), message: Data(message))
-        let base64 = try Base64.encode(hashed)
+        let hashed = Hash.hmac(.sha256, key: Data(channelSecret), message: Data(message))
+        let base64 = Base64.encode(Data(hashed))
         return (base64 == signature)
     }
     
     public func parseRequest(_ request: Request, handler: ContentHandler) throws -> Response {
         var body: String = ""
         if case .buffer(let data) = request.body {
-            body = String(data)
+            body = String(describing: data)
         } else {
             return failureResponse
         }
 
         // validate signature
-        guard let signature = request.headers["X-LINE-ChannelSignature"].first else {
+        guard let signature = request.headers["X-LINE-ChannelSignature"] else {
             return Response(status: .forbidden)
         }
         
@@ -78,16 +78,16 @@ public class LINEBotAPI {
 }
 
 extension LINEBotAPI {
-    private func send(to mid: [String], eventType: EventType = .SendingMessage, content: JSON) throws {
-        let to = JSON.from(mid.map(JSON.from))
+    internal func send(to mid: [String], eventType: EventType = .SendingMessage, content: C7.JSON) throws {
+        let to = JSON.infer(mid.map(JSON.infer))
         var newContent = content
         if case .SendingMessage = eventType {
-            newContent["toType"] = JSON.from(ToType.ToUser.rawValue)
+            newContent["toType"] = JSON.infer(ToType.ToUser.rawValue)
         }
-        let json = JSON.from([
+        let json = JSON.infer([
             "to": to,
-            "toChannel": JSON.from(BotAPISendingChannelId),
-            "eventType": JSON.from(eventType.rawValue),
+            "toChannel": JSON.infer(BotAPISendingChannelId),
+            "eventType": JSON.infer(eventType.rawValue),
             "content": newContent,
         ])
         try client.post(uri: "https://trialbot-api.line.me/v1/events", json: json)
@@ -143,17 +143,18 @@ extension LINEBotAPI {
 }
 
 extension LINEBotAPI {
-    public typealias MessageBuild = MessageBuilder -> Void
+    public typealias MessageBuild = (MessageBuilder) -> Void
     public func sendMultipleMessage(to mid: String..., construct: MessageBuild) throws {
         let builder = MessageBuilder()
         construct(builder)
 
-        guard let contents = try builder.build(), arr = contents.array where arr.count > 0 else {
+        guard let contents = try builder.build(),
+            let arr = contents.arrayValue, arr.count > 0 else {
             throw BuilderError.ContentsNotFound
         }
         
-        let content = JSON.from([
-            "messageNotified": JSON.from(0),
+        let content = JSON.infer([
+            "messageNotified": JSON.infer(0),
             "messages": contents,
         ])
         try send(to: mid, eventType: .SendingMultipleMessage, content: content)
@@ -161,7 +162,7 @@ extension LINEBotAPI {
 }
 
 extension LINEBotAPI {
-    public typealias RichMessageBuild = RichMessageBuilder -> Void
+    public typealias RichMessageBuild = (RichMessageBuilder) -> Void
     public func sendRichMessage(to mid: String..., imageUrl: String, height: Int = 1040, altText: String, construct: RichMessageBuild) throws {
         let builder = try RichMessageBuilder(height: height)
         construct(builder)
@@ -170,13 +171,13 @@ extension LINEBotAPI {
             throw BuilderError.ContentsNotFound
         }
         
-        var contentMetadata = JSON.from([:])
-        contentMetadata["SPEC_REV"] = JSON.from("1") // Fixed 1
-        contentMetadata["DOWNLOAD_URL"] = JSON.from(imageUrl)
-        contentMetadata["ALT_TEXT"] = JSON.from(altText)
-        contentMetadata["MARKUP_JSON"] = JSON.from(markupJSON.description)
-        let content = JSON.from([
-            "contentType": JSON.from(ContentType.Rich.rawValue),
+        var contentMetadata = JSON.infer([:])
+        contentMetadata["SPEC_REV"] = JSON.infer("1") // Fixed 1
+        contentMetadata["DOWNLOAD_URL"] = JSON.infer(imageUrl)
+        contentMetadata["ALT_TEXT"] = JSON.infer(altText)
+        contentMetadata["MARKUP_JSON"] = JSON.infer(markupJSON.description)
+        let content = JSON.infer([
+            "contentType": JSON.infer(ContentType.Rich.rawValue),
             "contentMetadata": contentMetadata,
         ])
         try send(to: mid, eventType: .SendingMessage, content: content)

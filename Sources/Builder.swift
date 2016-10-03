@@ -1,6 +1,6 @@
 import JSON
 
-public enum BuilderError: ErrorProtocol {
+public enum BuilderError: Error {
     case BuildFailed, ContentsNotFound, InvalidHeight
 }
 

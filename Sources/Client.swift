@@ -1,26 +1,25 @@
-import URI
 import JSON
+import Curl
 
 public typealias Headers = [(String,String)]
 
-public enum APIClientError: ErrorProtocol {
+public enum ClientError: Error {
     case InvalidURI
 }
 
-public struct APIClient {
+public struct Client {
     var headers: Headers
+    let curl = Curl()
 
     public init(headers: Headers) {
         self.headers = headers
     }
 
     public func get(uri: String) throws {
-        let curl = Curl(url: uri, headers: headers)
-        curl.get()
+        let _ = curl.get(url: uri, headers: headers)
     }
 
     public func post(uri: String, json: JSON) throws {
-        let curl = Curl(url: uri, headers: headers)
-        curl.post(body: JSONSerializer().serialize(json: json))
+        let _ = curl.post(url: uri, headers: headers, body: JSONSerializer().serialize(json: json))
     }
 }

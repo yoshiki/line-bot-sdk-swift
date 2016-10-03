@@ -3,7 +3,7 @@ import JSON
 public struct MessageParser {
     public static func parse(_ json: JSON) throws -> Content? {
         let contentType = json.get(path: "content.contentType")
-            .flatMap { $0.int }
+            .flatMap { $0.intValue }
             .flatMap { ContentType(rawValue: $0) }
         if let contentType = contentType {
             switch contentType {

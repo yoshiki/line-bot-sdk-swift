@@ -15,21 +15,21 @@ public protocol Message: Content {}
 
 extension Message {
     public var contentId: String? {
-        return self["content.id"].flatMap { $0.string }
+        return self["content.id"].flatMap { $0.stringValue }
     }
     
     public var contentType: ContentType? {
         return self["content.contentType"]
-            .flatMap { $0.int }
+            .flatMap { $0.intValue }
             .flatMap { ContentType(rawValue: $0) }
     }
     
     public var createTime: String? {
-        return self["content.createdTime"].flatMap { $0.string }
+        return self["content.createdTime"].flatMap { $0.stringValue }
     }
     
     public var fromMid: String? {
-        return self["content.from"].flatMap { $0.string }
+        return self["content.from"].flatMap { $0.stringValue }
     }
 }
 
@@ -41,7 +41,7 @@ public struct TextMessage: Message {
     }
     
     public var text: String? {
-        return json.get(path: "content.text").flatMap{ $0.string }
+        return json.get(path: "content.text").flatMap{ $0.stringValue }
     }
 }
 
@@ -77,16 +77,16 @@ public struct LocationMessage: Message {
     }
     
     var title: String? {
-        return json.get(path: "content.location.title").flatMap{ $0.string }
+        return json.get(path: "content.location.title").flatMap{ $0.stringValue }
     }
     var address: String? {
-        return json.get(path: "content.location.address").flatMap{ $0.string }
+        return json.get(path: "content.location.address").flatMap{ $0.stringValue }
     }
     var latitude: String? {
-        return json.get(path: "content.location.latitude").flatMap{ $0.string }
+        return json.get(path: "content.location.latitude").flatMap{ $0.stringValue }
     }
     var longitude: String? {
-        return json.get(path: "content.location.longitude").flatMap{ $0.string }
+        return json.get(path: "content.location.longitude").flatMap{ $0.stringValue }
     }
 }
 
@@ -98,16 +98,16 @@ public struct StickerMessage: Message {
     }
     
     var stkPkgId: String? {
-        return json.get(path: "content.contentMetadata.STKPKGID").flatMap{ $0.string }
+        return json.get(path: "content.contentMetadata.STKPKGID").flatMap{ $0.stringValue }
     }
     var stkId: String? {
-        return json.get(path: "content.contentMetadata.STKID").flatMap{ $0.string }
+        return json.get(path: "content.contentMetadata.STKID").flatMap{ $0.stringValue }
     }
     var stkVer: String? {
-        return json.get(path: "content.contentMetadata.STKVER").flatMap{ $0.string }
+        return json.get(path: "content.contentMetadata.STKVER").flatMap{ $0.stringValue }
     }
     var stkTxt: String? {
-        return json.get(path: "content.contentMetadata.STKTXT").flatMap{ $0.string }
+        return json.get(path: "content.contentMetadata.STKTXT").flatMap{ $0.stringValue }
     }
 }
 
@@ -119,9 +119,9 @@ public struct ContactMessage: Message {
     }
     
     var mid: String? {
-        return json.get(path: "content.contentMetadata.mid").flatMap{ $0.string }
+        return json.get(path: "content.contentMetadata.mid").flatMap{ $0.stringValue }
     }
     var displayName: String? {
-        return json.get(path: "content.contentMetadata.displayName").flatMap{ $0.string }
+        return json.get(path: "content.contentMetadata.displayName").flatMap{ $0.stringValue }
     }
 }

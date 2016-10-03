@@ -6,7 +6,7 @@ extension JSON {
         var json = Optional(self)
         paths.forEach { key in
             json = json.flatMap {
-                if let index = Int(key), arr = $0.array where index < arr.count {
+                if let index = Int(key), let arr = $0.arrayValue, index < arr.count {
                     return $0[index]
                 } else {
                     return $0[key]

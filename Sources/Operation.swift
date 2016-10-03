@@ -11,17 +11,17 @@ extension Operation {
     public var fromMid: String? {
         return self["content.params"]
             .flatMap { $0[0] }
-            .flatMap { $0.string }
+            .flatMap { $0.stringValue }
     }
     
     public var opType: OpType? {
         return self["content.opType"]
-            .flatMap { $0.int }
+            .flatMap { $0.intValue }
             .flatMap { OpType(rawValue: $0) }
     }
     
     public var revision: Int? {
-        return self["content.revision"].flatMap { $0.int }
+        return self["content.revision"].flatMap { $0.intValue }
     }
 }
 

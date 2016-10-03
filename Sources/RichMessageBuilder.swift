@@ -1,5 +1,4 @@
 import JSON
-import URI
 
 public enum RichMessageListenerType: String {
     case Touch = "touch" // Fixed Value
@@ -27,7 +26,7 @@ public struct Bounds {
     }
     
     public var json: JSON {
-        return JSON.from(array.map(JSON.from))
+        return JSON.array(array.map(JSON.infer))
     }
 }
 
@@ -45,10 +44,10 @@ public struct RichMessageAction {
     }
     
     public var json: JSON {
-        return JSON.from([
-            "type": JSON.from(type.rawValue),
-            "text": JSON.from(text),
-            "params": JSON.from([ "linkUri": JSON.from(linkUri) ])
+        return JSON.infer([
+            "type": JSON.infer(type.rawValue),
+            "text": JSON.infer(text),
+            "params": JSON.infer([ "linkUri": JSON.infer(linkUri) ])
         ])
     }
 }
@@ -65,10 +64,10 @@ public struct RichMessageListener {
     }
     
     public var json: JSON {
-        return JSON.from([
-            "type": JSON.from(type.rawValue),
+        return JSON.infer([
+            "type": JSON.infer(type.rawValue),
             "params": bounds.json,
-            "action": JSON.from(action.name)
+            "action": JSON.infer(action.name)
         ])
     }
 }
@@ -86,12 +85,12 @@ public class RichMessageBuilder: Builder {
     }
 
     private var jsonListeners: JSON {
-        return JSON.from(listeners.map { $0.json })
+        return JSON.infer(listeners.map { $0.json })
     }
     private var jsonActions: JSON {
         var dic = [String:JSON]()
         actions.forEach { dic[$0.name] = $0.json }
-        return JSON.from(dic)
+        return JSON.infer(dic)
     }
 
     public func addListener(listener: RichMessageListener) {
@@ -105,40 +104,40 @@ public class RichMessageBuilder: Builder {
         }
         
         // construct canvas
-        var canvas = JSON.from([:])
-        canvas["width"] = JSON.from(1040)  // Fixed 1040
-        canvas["height"] = JSON.from(height)  // Max value is 2080
-        canvas["initialScene"] = JSON.from("scene1")
+        var canvas = JSON.infer([:])
+        canvas["width"] = JSON.infer(1040)  // Fixed 1040
+        canvas["height"] = JSON.infer(height)  // Max value is 2080
+        canvas["initialScene"] = JSON.infer("scene1")
         
         // construct images
-        var image1 = JSON.from([:])
-        image1["x"] = JSON.from(0) // Fixed 0
-        image1["y"] = JSON.from(0) // Fixed 0
-        image1["w"] = JSON.from(1040) // Fixed 1040
-        image1["h"] = JSON.from(height) // Max value is 2080
-        let images = JSON.from([
+        var image1 = JSON.infer([:])
+        image1["x"] = JSON.infer(0) // Fixed 0
+        image1["y"] = JSON.infer(0) // Fixed 0
+        image1["w"] = JSON.infer(1040) // Fixed 1040
+        image1["h"] = JSON.infer(height) // Max value is 2080
+        let images = JSON.infer([
             "image1": image1
         ])
 
         // construct draws
-        var draw = JSON.from([:])
-        draw["image"] = JSON.from("image1")
-        draw["x"] = JSON.from(0) // Fixed 0
-        draw["y"] = JSON.from(0) // Fixed 0
-        draw["w"] = JSON.from(1040) // Any one of 1040, 700, 460, 300, 240. This value must be same as the image width.
-        draw["h"] = JSON.from(height) // Max value is 2080
-        let draws = JSON.from([ draw ])
+        var draw = JSON.infer([:])
+        draw["image"] = JSON.infer("image1")
+        draw["x"] = JSON.infer(0) // Fixed 0
+        draw["y"] = JSON.infer(0) // Fixed 0
+        draw["w"] = JSON.infer(1040) // Any one of 1040, 700, 460, 300, 240. This value must be same as the image width.
+        draw["h"] = JSON.infer(height) // Max value is 2080
+        let draws = JSON.infer([ draw ])
 
         // construct scenes
-        let scenes = JSON.from([
-            "scene1": JSON.from([
+        let scenes = JSON.infer([
+            "scene1": JSON.infer([
                 "draws": draws,
                 "listeners": jsonListeners,
             ])
         ])
 
         // return rich message
-        return JSON.from([
+        return JSON.infer([
             "canvas": canvas,
             "images": images,
             "actions": jsonActions,
