@@ -9,16 +9,16 @@ public struct ContentParser {
         let eventType = json.get(path: "eventType")
             .flatMap { try? $0.asString() }
             .flatMap { EventType(rawValue: $0) }
-        if let eventType = eventType {
-            switch eventType {
-            case .ReceivingMessage:
-                return try MessageParser.parse(json)
-            case .ReceivingOperation:
-                return try OperationParser.parse(json)
-            default:
-                throw ContentParserError.UnknownEventType
-            }
-        }
+//        if let eventType = eventType {
+//            switch eventType {
+//            case .ReceivingMessage:
+//                return try MessageParser.parse(json)
+//            case .ReceivingOperation:
+//                return try OperationParser.parse(json)
+//            default:
+//                throw ContentParserError.UnknownEventType
+//            }
+//        }
         return nil
     }
 }

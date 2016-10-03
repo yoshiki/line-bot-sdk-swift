@@ -1,6 +1,6 @@
 import JSON
 
-public enum Type: String {
+public enum EventType: String {
     case Text     = "text"
     case Image    = "image"
     case Video    = "video"
@@ -8,30 +8,42 @@ public enum Type: String {
     case Location = "location"
     case Sticker  = "sticker"
     case Imagemap = "imagemap"
+    case Follow   = "follow"
+    case Unfollow = "unfollow"
+    case Join     = "join"
+    case Leave    = "leave"
+    case Postback = "postback"
+    case Beacon   = "beacon"
     
     var asJSON: JSON {
         return JSON.infer(rawValue)
     }
 }
 
+public enum SourceType: String {
+    case User  = "user"
+    case Group = "group"
+    case Room  = "room"
+}
+
 public struct Source {
-    public let key: String
-    public let value: String
+    public let type: SourceType
+    public let id: String
 }
 
 public struct Message {
     public let id: String
-    public let type: Type
+    public let type: EventType
     public let text: String
 }
 
 public protocol Event: Content {}
 
 extension Event {
-    public var type: Type? {
+    public var type: EventType? {
         return self["type"]
             .flatMap { $0.stringValue }
-            .flatMap { Type(rawValue: $0) }
+            .flatMap { EventType(rawValue: $0) }
     }
     
     public var replyToken: String? {
@@ -42,15 +54,15 @@ extension Event {
         return self["timestamp"].flatMap { $0.stringValue }
     }
     
-    public var source: [Source]? {
+    public var source: Source? {
         return self["source"]
             .flatMap { $0.objectValue }
-            .flatMap { (s) -> [Source]? in
-                var sources = [Source]()
-                s.forEach({ (key, value) in
-                    sources.append(Source(key: key, value: value.stringValue!))
-                })
-                return sources
+            .flatMap { (s) -> Source? in
+                if let type = s["type"]?.stringValue,
+                    let id = s["id"]?.stringValue {
+                    return Source(type: SourceType(rawValue: type)!, id: id)
+                }
+                return nil
             }
     }
 }
@@ -69,7 +81,7 @@ public struct TextMessage: Event {
                 if let id = m["id"]?.stringValue,
                     let type = m["type"]?.stringValue,
                     let text = m["text"]?.stringValue {
-                    return Message(id: id, type: Type(rawValue: type)!, text: text)
+                    return Message(id: id, type: EventType(rawValue: type)!, text: text)
                 }
                 return nil
             }

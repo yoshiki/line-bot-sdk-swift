@@ -4,7 +4,7 @@ public struct MessageParser {
     public static func parse(_ json: JSON) throws -> Content? {
         let contentType = json.get(path: "type")
             .flatMap { $0.stringValue }
-            .flatMap { Type(rawValue: $0) }
+            .flatMap { EventType(rawValue: $0) }
         if let contentType = contentType {
             switch contentType {
             case .Text:

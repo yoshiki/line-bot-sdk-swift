@@ -12,14 +12,14 @@ public class MessageBuilder: Builder {
 
     public func addText(text: String) {
         messages.append(JSON.infer([
-            "type": Type.Text.asJSON,
+            "type": EventType.Text.asJSON,
             "text": text.asJSON
         ]))
     }
     
     public func addImage(imageUrl: String, previewUrl: String) {
         messages.append(JSON.infer([
-            "type": Type.Image.asJSON,
+            "type": EventType.Image.asJSON,
             "originalContentUrl": imageUrl.asJSON,
             "previewImageUrl": previewUrl.asJSON,
         ]))
@@ -27,7 +27,7 @@ public class MessageBuilder: Builder {
 
     public func addVideo(videoUrl: String, previewUrl: String) {
         messages.append(JSON.infer([
-            "type": Type.Video.asJSON,
+            "type": EventType.Video.asJSON,
             "originalContentUrl": videoUrl.asJSON,
             "previewImageUrl": previewUrl.asJSON,
         ]))
@@ -35,7 +35,7 @@ public class MessageBuilder: Builder {
 
     public func addAudio(audioUrl: String, duration: Int) {
         messages.append(JSON.infer([
-            "type": Type.Audio.asJSON,
+            "type": EventType.Audio.asJSON,
             "originalContentUrl": audioUrl.asJSON,
             "duration": duration.asJSON
         ]))
@@ -43,7 +43,7 @@ public class MessageBuilder: Builder {
 
     public func addLocation(title: String, address: String, latitude: String, longitude: String) {
         messages.append(JSON.infer([
-            "type": Type.Location.asJSON,
+            "type": EventType.Location.asJSON,
             "title": title.asJSON,
             "address": address.asJSON,
             "latitude": latitude.asJSON,
@@ -53,7 +53,7 @@ public class MessageBuilder: Builder {
 
     public func addSticker(stickerId: String, packageId: String) {
         messages.append(JSON.infer([
-            "type": Type.Sticker.asJSON,
+            "type": EventType.Sticker.asJSON,
             "packageId": packageId.asJSON,
             "stickerId": stickerId.asJSON
         ]))
