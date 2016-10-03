@@ -1,75 +1,61 @@
 import JSON
 
 public class MessageBuilder: Builder {
-    private var contents = [JSON]()
+    private var messages = [JSON]()
     
     public func build() throws -> JSON? {
-        guard contents.count > 0 else {
+        guard messages.count > 0 else {
             throw BuilderError.ContentsNotFound
         }
-        return contents[0]
+        return JSON.infer(messages)
     }
 
     public func addText(text: String) {
-        let content = JSON.infer([
-            "contentType": JSON.infer(ContentType.Text.rawValue),
-            "text": JSON.infer(text),
-        ])
-        contents.append(content)
+        messages.append(JSON.infer([
+            "type": Type.Text.asJSON,
+            "text": text.asJSON
+        ]))
     }
     
     public func addImage(imageUrl: String, previewUrl: String) {
-        let content = JSON.infer([
-            "contentType": JSON.infer(ContentType.Image.rawValue),
-            "originalContentUrl": JSON.infer(imageUrl),
-            "previewImageUrl": JSON.infer(previewUrl),
-        ])
-        contents.append(content)
+        messages.append(JSON.infer([
+            "type": Type.Image.asJSON,
+            "originalContentUrl": imageUrl.asJSON,
+            "previewImageUrl": previewUrl.asJSON,
+        ]))
     }
 
     public func addVideo(videoUrl: String, previewUrl: String) {
-        let content = JSON.infer([
-            "contentType": JSON.infer(ContentType.Video.rawValue),
-            "originalContentUrl": JSON.infer(videoUrl),
-            "previewImageUrl": JSON.infer(previewUrl),
-        ])
-        contents.append(content)
+        messages.append(JSON.infer([
+            "type": Type.Video.asJSON,
+            "originalContentUrl": videoUrl.asJSON,
+            "previewImageUrl": previewUrl.asJSON,
+        ]))
     }
 
     public func addAudio(audioUrl: String, duration: Int) {
-        let metaData = JSON.infer([ "AUDLEN": "\(duration)" ])
-        let content = JSON.infer([
-            "contentType": JSON.infer(ContentType.Audio.rawValue),
-            "originalContentUrl": JSON.infer(audioUrl),
-            "contentMetadata": metaData,
-        ])
-        contents.append(content)
+        messages.append(JSON.infer([
+            "type": Type.Audio.asJSON,
+            "originalContentUrl": audioUrl.asJSON,
+            "duration": duration.asJSON
+        ]))
     }
 
-    public func addLocation(text: String, address: String, latitude: String, longitude: String) {
-        let location = JSON.infer([
-            "title": JSON.infer(address),
-            "latitude": JSON.infer(latitude),
-            "longitude": JSON.infer(longitude),
-        ])
-        let content = JSON.infer([
-            "contentType": JSON.infer(ContentType.Location.rawValue),
-            "text": JSON.infer(text),
-            "location": location,
-        ])
-        contents.append(content)
+    public func addLocation(title: String, address: String, latitude: String, longitude: String) {
+        messages.append(JSON.infer([
+            "type": Type.Location.asJSON,
+            "title": title.asJSON,
+            "address": address.asJSON,
+            "latitude": latitude.asJSON,
+            "longitude": longitude.asJSON,
+        ]))
     }
 
-    public func addSticker(stkId: String, stkPkgId: String, stkVer: String) {
-        let metaData = JSON.infer([
-            "STKID": JSON.infer(stkId),
-            "STKPKGID": JSON.infer(stkPkgId),
-            "STKVER": JSON.infer(stkVer),
-        ])
-        let content = JSON.infer([
-            "contentType": JSON.infer(ContentType.Sticker.rawValue),
-            "contentMetadata": metaData,
-        ])
-        contents.append(content)
+    public func addSticker(stickerId: String, packageId: String) {
+        messages.append(JSON.infer([
+            "type": Type.Sticker.asJSON,
+            "packageId": packageId.asJSON,
+            "stickerId": stickerId.asJSON
+        ]))
     }
 }

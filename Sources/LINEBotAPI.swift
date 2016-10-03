@@ -14,27 +14,20 @@ public class LINEBotAPI {
     internal let client: Client
     private let headers: Headers
     
-    public let channelId: String
     public let channelSecret: String
-    public let channelMid: String
     
     public var failureResponse: Response = Response(status: .forbidden)
 
     public init() throws {
-        guard let channelId = Env.getVar(name: "LINE_CHANNEL_ID"),
-            let channelSecret = Env.getVar(name: "LINE_CHANNEL_SECRET"),
-            let channelMid = Env.getVar(name: "LINE_BOT_MID") else {
+        guard let channelSecret = Env.getVar(name: "CHANNEL_SECRET"),
+            let accessToken = Env.getVar(name: "ACCESS_TOKEN") else {
             throw LINEBotAPIError.ChannelInfoNotFound
         }
         self.headers = [
             ("Content-Type", "application/json; charset=utf-8"),
-            ("X-Line-ChannelID", channelId),
-            ("X-Line-ChannelSecret", channelSecret),
-            ("X-Line-Trusted-User-With-ACL", channelMid),
+            ("Authorization", "Bearer \(accessToken)")
         ]
-        self.channelId = channelId
         self.channelSecret = channelSecret
-        self.channelMid = channelMid
         self.client = Client(headers: headers)
     }
 
@@ -78,92 +71,83 @@ public class LINEBotAPI {
 }
 
 extension LINEBotAPI {
-    internal func send(to mid: [String], eventType: EventType = .SendingMessage, content: C7.JSON) throws {
-        let to = JSON.infer(mid.map(JSON.infer))
-        var newContent = content
-        if case .SendingMessage = eventType {
-            newContent["toType"] = JSON.infer(ToType.ToUser.rawValue)
-        }
-        let json = JSON.infer([
-            "to": to,
-            "toChannel": JSON.infer(BotAPISendingChannelId),
-            "eventType": JSON.infer(eventType.rawValue),
-            "content": newContent,
-        ])
-        try client.post(uri: "https://trialbot-api.line.me/v1/events", json: json)
+    internal func send(to userId: String, messages: C7.JSON) throws {
+        let to = userId.asJSON
+        let json = JSON.infer([ "to": to, "messages": messages ])
+        try client.post(uri: "https://api.line.me/v2/bot/message/push", json: json)
     }
 
-    public func sendText(to mid: String..., text: String) throws {
+    public func sendText(to userId: String, text: String) throws {
         let builder = MessageBuilder()
         builder.addText(text: text)
-        if let content = try builder.build() {
-            try send(to: mid, content: content)
+        if let messages = try builder.build() {
+            try send(to: userId, messages: messages)
         }
     }
 
-    public func sendImage(to mid: String..., imageUrl: String, previewUrl: String) throws {
+    public func sendImage(to userId: String, imageUrl: String, previewUrl: String) throws {
         let builder = MessageBuilder()
         builder.addImage(imageUrl: imageUrl, previewUrl: previewUrl)
-        if let content = try builder.build() {
-            try send(to: mid, content: content)
+        if let messages = try builder.build() {
+            try send(to: userId, messages: messages)
         }
     }
 
-    public func sendVideo(to mid: String..., videoUrl: String, previewUrl: String) throws {
+    public func sendVideo(to userId: String, videoUrl: String, previewUrl: String) throws {
         let builder = MessageBuilder()
         builder.addVideo(videoUrl: videoUrl, previewUrl: previewUrl)
-        if let content = try builder.build() {
-            try send(to: mid, content: content)
+        if let messages = try builder.build() {
+            try send(to: userId, messages: messages)
         }
     }
 
-    public func sendAudio(to mid: String..., audioUrl: String, duration: Int) throws {
+    public func sendAudio(to userId: String, audioUrl: String, duration: Int) throws {
         let builder = MessageBuilder()
         builder.addAudio(audioUrl: audioUrl, duration: duration)
-        if let content = try builder.build() {
-            try send(to: mid, content: content)
+        if let messages = try builder.build() {
+            try send(to: userId, messages: messages)
         }
     }
 
-    public func sendLocation(to mid: String..., text: String, address: String, latitude: String, longitude: String) throws {
+    public func sendLocation(to userId: String, title: String, address: String, latitude: String, longitude: String) throws {
         let builder = MessageBuilder()
-        builder.addLocation(text: text, address: address, latitude: latitude, longitude: longitude)
-        if let content = try builder.build() {
-            try send(to: mid, content: content)
+        builder.addLocation(title: title, address: address, latitude: latitude, longitude: longitude)
+        if let messages = try builder.build() {
+            try send(to: userId, messages: messages)
         }
     }
 
-    public func sendSticker(to mid: String..., stkId: String, stkPkgId: String, stkVer: String) throws {
+    public func sendSticker(to userId: String, stickerId: String, packageId: String) throws {
         let builder = MessageBuilder()
-        builder.addSticker(stkId: stkId, stkPkgId: stkPkgId, stkVer: stkVer)
-        if let content = try builder.build() {
-            try send(to: mid, content: content)
+        builder.addSticker(stickerId: stickerId, packageId: packageId)
+        if let messages = try builder.build() {
+            try send(to: userId, messages: messages)
         }
     }
 }
 
 extension LINEBotAPI {
     public typealias MessageBuild = (MessageBuilder) -> Void
-    public func sendMultipleMessage(to mid: String..., construct: MessageBuild) throws {
+    public func sendMultipleMessage(to userId: String, construct: MessageBuild) throws {
         let builder = MessageBuilder()
         construct(builder)
 
-        guard let contents = try builder.build(),
-            let arr = contents.arrayValue, arr.count > 0 else {
+        guard let messages = try builder.build(),
+            let arr = messages.arrayValue, arr.count > 0 else {
             throw BuilderError.ContentsNotFound
         }
         
-        let content = JSON.infer([
+        let newMessages = JSON.infer([
             "messageNotified": JSON.infer(0),
-            "messages": contents,
+            "messages": messages,
         ])
-        try send(to: mid, eventType: .SendingMultipleMessage, content: content)
+        try send(to: userId, messages: newMessages)
     }
 }
 
 extension LINEBotAPI {
     public typealias RichMessageBuild = (RichMessageBuilder) -> Void
-    public func sendRichMessage(to mid: String..., imageUrl: String, height: Int = 1040, altText: String, construct: RichMessageBuild) throws {
+    public func sendRichMessage(to userId: String, imageUrl: String, height: Int = 1040, altText: String, construct: RichMessageBuild) throws {
         let builder = try RichMessageBuilder(height: height)
         construct(builder)
         
@@ -177,9 +161,9 @@ extension LINEBotAPI {
         contentMetadata["ALT_TEXT"] = JSON.infer(altText)
         contentMetadata["MARKUP_JSON"] = JSON.infer(markupJSON.description)
         let content = JSON.infer([
-            "contentType": JSON.infer(ContentType.Rich.rawValue),
+//            "contentType": JSON.infer(ContentType.Rich.rawValue),
             "contentMetadata": contentMetadata,
         ])
-        try send(to: mid, eventType: .SendingMessage, content: content)
+        try send(to: userId, messages: content)
     }
 }

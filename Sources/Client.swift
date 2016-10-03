@@ -16,10 +16,12 @@ public struct Client {
     }
 
     public func get(uri: String) throws {
-        let _ = curl.get(url: uri, headers: headers)
+        let res = curl.get(url: uri, headers: headers)
+        print(res)
     }
 
     public func post(uri: String, json: JSON) throws {
-        let _ = curl.post(url: uri, headers: headers, body: JSONSerializer().serialize(json: json))
+        let res = curl.post(url: uri, headers: headers, body: JSONSerializer().serialize(json: json))
+        print(res?.description)
     }
 }
