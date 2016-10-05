@@ -1,29 +1,29 @@
 import JSON
 
-public enum EventType: String {
-    case Text     = "text"
-    case Image    = "image"
-    case Video    = "video"
-    case Audio    = "audio"
-    case Location = "location"
-    case Sticker  = "sticker"
-    case Imagemap = "imagemap"
-    case Follow   = "follow"
-    case Unfollow = "unfollow"
-    case Join     = "join"
-    case Leave    = "leave"
-    case Postback = "postback"
-    case Beacon   = "beacon"
-    
-    var asJSON: JSON {
-        return JSON.infer(rawValue)
-    }
+public enum EventType: String, StringJSONConvertible {
+    case message  = "message"
+    case follow   = "follow"
+    case unfollow = "unfollow"
+    case join     = "join"
+    case leave    = "leave"
+    case postback = "postback"
+    case beacon   = "beacon"
 }
 
-public enum SourceType: String {
-    case User  = "user"
-    case Group = "group"
-    case Room  = "room"
+public enum MessageType: String, StringJSONConvertible {
+    case text     = "text"
+    case image    = "image"
+    case video    = "video"
+    case audio    = "audio"
+    case location = "location"
+    case sticker  = "sticker"
+    case imagemap = "imagemap"
+}
+
+public enum SourceType: String, StringJSONConvertible {
+    case user  = "user"
+    case group = "group"
+    case room  = "room"
 }
 
 public struct Source {
@@ -31,27 +31,31 @@ public struct Source {
     public let id: String
 }
 
-public struct Message {
-    public let id: String
-    public let type: EventType
-    public let text: String
+public protocol GetContentAPI {}
+
+public protocol Event {
+    var json: JSON { get set }
+    init(json: JSON)
 }
 
-public protocol Event: Content {}
-
 extension Event {
-    public var type: EventType? {
+    public subscript(path: String) -> JSON? {
+        return json.get(path: path)
+    }
+    
+    public var replyToken: String? {
+        return json["replyToken"]?.stringValue
+    }
+    
+    public var eventType: EventType? {
         return self["type"]
             .flatMap { $0.stringValue }
             .flatMap { EventType(rawValue: $0) }
     }
     
-    public var replyToken: String? {
-        return self["replyToken"].flatMap { $0.stringValue }
-    }
-    
     public var timestamp: String? {
-        return self["timestamp"].flatMap { $0.stringValue }
+        return self["timestamp"]
+            .flatMap { $0.stringValue }
     }
     
     public var source: Source? {
@@ -59,36 +63,63 @@ extension Event {
             .flatMap { $0.objectValue }
             .flatMap { (s) -> Source? in
                 if let type = s["type"]?.stringValue,
-                    let id = s["id"]?.stringValue {
-                    return Source(type: SourceType(rawValue: type)!, id: id)
+                    let sourceType = SourceType(rawValue: type) {
+                    switch sourceType {
+                    case .user:
+                        if let id = s["userId"]?.stringValue {
+                            return Source(type: sourceType, id: id)
+                        }
+                    case .group:
+                        if let id = s["groupId"]?.stringValue {
+                            return Source(type: sourceType, id: id)
+                        }
+                    case .room:
+                        if let id = s["roomId"]?.stringValue {
+                            return Source(type: sourceType, id: id)
+                        }
+                    }
                 }
                 return nil
             }
     }
 }
 
-public struct TextMessage: Event {
-    public var json: JSON
-    
-    public init(json: JSON) {
-        self.json = json
+public protocol MessageEvent: Event {}
+
+extension MessageEvent {
+    public var message: JSON? {
+        return json["message"]
     }
     
-    public var message: Message? {
-        return self["message"]
+    public var messageId: String? {
+        return message
             .flatMap { $0.objectValue }
-            .flatMap { (m) -> Message? in
-                if let id = m["id"]?.stringValue,
-                    let type = m["type"]?.stringValue,
-                    let text = m["text"]?.stringValue {
-                    return Message(id: id, type: EventType(rawValue: type)!, text: text)
-                }
-                return nil
-            }
+            .flatMap { $0["id"]?.stringValue }
+    }
+
+    public var messageType: MessageType? {
+        return message
+            .flatMap { $0.objectValue }
+            .flatMap { $0["type"]?.stringValue }
+            .flatMap { MessageType(rawValue: $0) }
     }
 }
 
-public struct ImageMessage: Event {
+public struct TextMessage: MessageEvent {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+    
+    public var text: String? {
+        return message
+            .flatMap { $0.objectValue }
+            .flatMap { $0["text"]?.stringValue }
+    }
+}
+
+public struct ImageMessage: MessageEvent, GetContentAPI {
     public var json: JSON
 
     public init(json: JSON) {
@@ -96,7 +127,7 @@ public struct ImageMessage: Event {
     }
 }
 
-public struct VideoMessage: Event {
+public struct VideoMessage: MessageEvent, GetContentAPI {
     public var json: JSON
     
     public init(json: JSON) {
@@ -104,7 +135,7 @@ public struct VideoMessage: Event {
     }
 }
 
-public struct AudioMessage: Event {
+public struct AudioMessage: MessageEvent, GetContentAPI {
     public var json: JSON
     
     public init(json: JSON) {
@@ -112,7 +143,7 @@ public struct AudioMessage: Event {
     }
 }
 
-public struct LocationMessage: Event {
+public struct LocationMessage: MessageEvent {
     public var json: JSON
     
     public init(json: JSON) {
@@ -120,51 +151,129 @@ public struct LocationMessage: Event {
     }
     
     var title: String? {
-        return json.get(path: "content.location.title").flatMap{ $0.stringValue }
+        return message
+            .flatMap { $0["title"]?.stringValue }
     }
     var address: String? {
-        return json.get(path: "content.location.address").flatMap{ $0.stringValue }
+        return message
+            .flatMap { $0["address"]?.stringValue }
     }
     var latitude: String? {
-        return json.get(path: "content.location.latitude").flatMap{ $0.stringValue }
+        return message
+            .flatMap { $0["latitude"]?.stringValue }
     }
     var longitude: String? {
-        return json.get(path: "content.location.longitude").flatMap{ $0.stringValue }
+        return message
+            .flatMap { $0["latitude"]?.stringValue }
     }
 }
 
-public struct StickerMessage: Event {
+// See also: https://devdocs.line.me/files/sticker_list.pdf
+public struct StickerMessage: MessageEvent {
     public var json: JSON
     
     public init(json: JSON) {
         self.json = json
     }
     
-    var stkPkgId: String? {
-        return json.get(path: "content.contentMetadata.STKPKGID").flatMap{ $0.stringValue }
+    var packageId: String? {
+        return message
+            .flatMap { $0["packageId"]?.stringValue }
     }
-    var stkId: String? {
-        return json.get(path: "content.contentMetadata.STKID").flatMap{ $0.stringValue }
-    }
-    var stkVer: String? {
-        return json.get(path: "content.contentMetadata.STKVER").flatMap{ $0.stringValue }
-    }
-    var stkTxt: String? {
-        return json.get(path: "content.contentMetadata.STKTXT").flatMap{ $0.stringValue }
+    var stickerId: String? {
+        return message
+            .flatMap { $0["stickerId"]?.stringValue }
     }
 }
 
-public struct ContactMessage: Event {
+public struct FollowEvent: Event {
     public var json: JSON
     
     public init(json: JSON) {
         self.json = json
     }
     
-    var mid: String? {
-        return json.get(path: "content.contentMetadata.mid").flatMap{ $0.stringValue }
+    public var userId: String? {
+        return source?.id
     }
-    var displayName: String? {
-        return json.get(path: "content.contentMetadata.displayName").flatMap{ $0.stringValue }
+}
+
+public struct UnfollowEvent: Event {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+    
+    public var userId: String? {
+        return source?.id
+    }
+}
+
+public struct JoinEvent: Event {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+
+    public var groupId: String? {
+        return source?.id
+    }
+}
+
+
+public struct LeaveEvent: Event {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+
+    public var groupId: String? {
+        return source?.id
+    }
+}
+
+
+public struct PostbackEvent: Event {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+    
+    public var postback: JSON? {
+        return json["postback"]
+    }
+    
+    public var data: String? {
+        return postback
+            .flatMap { $0.objectValue }
+            .flatMap { $0["data"]?.stringValue }
+    }
+}
+
+public struct BeaconEvent: Event {
+    public var json: JSON
+    
+    public init(json: JSON) {
+        self.json = json
+    }
+    
+    public var beacon: JSON? {
+        return json["beacon"]
+    }
+    
+    public var hwid: String? {
+        return beacon
+            .flatMap { $0.objectValue }
+            .flatMap { $0["hwid"]?.stringValue }
+    }
+    
+    public var type: String? {
+        return beacon
+            .flatMap { $0.objectValue }
+            .flatMap { $0["type"]?.stringValue }
     }
 }

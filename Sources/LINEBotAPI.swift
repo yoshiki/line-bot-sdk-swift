@@ -4,12 +4,12 @@ import Base64
 import HTTP
 
 public enum LINEBotAPIError: Error {
-    case ChannelInfoNotFound
-    case ContentNotFound
+    case channelInfoNotFound
+    case cventNotFound
 }
 
 public class LINEBotAPI {
-    private typealias ContentHandler = (C7.JSON) throws -> Void
+    private typealias EventHandler = (Event) throws -> Void
     
     internal let client: Client
     private let headers: Headers
@@ -21,7 +21,7 @@ public class LINEBotAPI {
     public init() throws {
         guard let channelSecret = Env.getVar(name: "CHANNEL_SECRET"),
             let accessToken = Env.getVar(name: "ACCESS_TOKEN") else {
-            throw LINEBotAPIError.ChannelInfoNotFound
+            throw LINEBotAPIError.channelInfoNotFound
         }
         self.headers = [
             ("Content-Type", "application/json; charset=utf-8"),
@@ -37,7 +37,7 @@ public class LINEBotAPI {
         return (base64 == signature)
     }
     
-    public func parseRequest(_ request: Request, handler: ContentHandler) throws -> Response {
+    public func parseRequest(_ request: Request, handler: EventHandler) throws -> Response {
         var body: String = ""
         if case .buffer(let data) = request.body {
             body = String(describing: data)
@@ -50,16 +50,18 @@ public class LINEBotAPI {
             return Response(status: .forbidden)
         }
         
-        let isValid = try validateSignature(
+        let isValidSignature = try validateSignature(
             message: body,
             channelSecret: channelSecret,
             signature: signature
         )
 
-        if isValid {
+        if isValidSignature {
             let json = try JSONParser().parse(data: Data(body))
             if let events = json["events"]?.arrayValue {
-                events.forEach { try? handler($0) }
+                try events.forEach {
+                    try EventParser.parse($0).flatMap(handler)
+                }
                 return Response(status: .ok)
             }
         }
@@ -68,18 +70,19 @@ public class LINEBotAPI {
 }
 
 extension LINEBotAPI {
-    internal func replyMessage(replyToken: String, messages: C7.JSON) throws {
+    public func replyMessage(replyToken: String, messages: C7.JSON) throws {
+        let json = JSON.infer([ "replyToken": replyToken.asJSON, "messages": messages ])
+        try client.post(uri: URLHelper.replyMessageURL(), json: json)
     }
 }
 
 extension LINEBotAPI {
-    internal func pushMessage(to userId: String, messages: C7.JSON) throws {
-        let to = userId.asJSON
-        let json = JSON.infer([ "to": to, "messages": messages ])
-        try client.post(uri: "https://api.line.me/v2/bot/message/push", json: json)
+    public func pushMessage(to userId: String, messages: C7.JSON) throws {
+        let json = JSON.infer([ "to": userId.asJSON, "messages": messages ])
+        try client.post(uri: URLHelper.pushMessageURL(), json: json)
     }
 
-    public func senText(to userId: String, text: String) throws {
+    public func sendText(to userId: String, text: String) throws {
         let builder = MessageBuilder()
         builder.addText(text: text)
         if let messages = try builder.build() {
@@ -126,46 +129,17 @@ extension LINEBotAPI {
             try pushMessage(to: userId, messages: messages)
         }
     }
-}
 
-extension LINEBotAPI {
-    public typealias MessageBuild = (MessageBuilder) -> Void
-    public func sendMultipleMessage(to userId: String, construct: MessageBuild) throws {
+    public func sendImagemap(to userId: String,
+                             baseUrl: String,
+                             altText: String,
+                             width: ImagemapBaseSize = .length1040,
+                             height: ImagemapBaseSize = .length1040,
+                             actionBuilder: ImagemapActionBuilder) throws {
         let builder = MessageBuilder()
-        construct(builder)
-
-        guard let messages = try builder.build(),
-            let arr = messages.arrayValue, arr.count > 0 else {
-            throw BuilderError.ContentsNotFound
+        builder.addImagemap(baseUrl: baseUrl, altText: altText, width: width, height: height, actionBuilder: actionBuilder)
+        if let messages = try builder.build() {
+            try pushMessage(to: userId, messages: messages)
         }
-        
-        let newMessages = JSON.infer([
-            "messageNotified": JSON.infer(0),
-            "messages": messages,
-        ])
-        try pushMessage(to: userId, messages: newMessages)
-    }
-}
-
-extension LINEBotAPI {
-    public typealias RichMessageBuild = (RichMessageBuilder) -> Void
-    public func sendRichMessage(to userId: String, imageUrl: String, height: Int = 1040, altText: String, construct: RichMessageBuild) throws {
-        let builder = try RichMessageBuilder(height: height)
-        construct(builder)
-        
-        guard let markupJSON = try builder.build() else {
-            throw BuilderError.ContentsNotFound
-        }
-        
-        var contentMetadata = JSON.infer([:])
-        contentMetadata["SPEC_REV"] = JSON.infer("1") // Fixed 1
-        contentMetadata["DOWNLOAD_URL"] = JSON.infer(imageUrl)
-        contentMetadata["ALT_TEXT"] = JSON.infer(altText)
-        contentMetadata["MARKUP_JSON"] = JSON.infer(markupJSON.description)
-        let content = JSON.infer([
-//            "contentType": JSON.infer(ContentType.Rich.rawValue),
-            "contentMetadata": contentMetadata,
-        ])
-        try pushMessage(to: userId, messages: content)
     }
 }

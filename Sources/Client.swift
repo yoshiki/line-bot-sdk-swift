@@ -4,7 +4,7 @@ import Curl
 public typealias Headers = [(String,String)]
 
 public enum ClientError: Error {
-    case InvalidURI
+    case invalidURI
 }
 
 public struct Client {

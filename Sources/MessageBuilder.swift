@@ -5,21 +5,21 @@ public class MessageBuilder: Builder {
     
     public func build() throws -> JSON? {
         guard messages.count > 0 else {
-            throw BuilderError.ContentsNotFound
+            throw BuilderError.contentsNotFound
         }
         return JSON.infer(messages)
     }
 
     public func addText(text: String) {
         messages.append(JSON.infer([
-            "type": EventType.Text.asJSON,
+            "type": MessageType.text.asJSON,
             "text": text.asJSON
         ]))
     }
     
     public func addImage(imageUrl: String, previewUrl: String) {
         messages.append(JSON.infer([
-            "type": EventType.Image.asJSON,
+            "type": MessageType.image.asJSON,
             "originalContentUrl": imageUrl.asJSON,
             "previewImageUrl": previewUrl.asJSON,
         ]))
@@ -27,7 +27,7 @@ public class MessageBuilder: Builder {
 
     public func addVideo(videoUrl: String, previewUrl: String) {
         messages.append(JSON.infer([
-            "type": EventType.Video.asJSON,
+            "type": MessageType.video.asJSON,
             "originalContentUrl": videoUrl.asJSON,
             "previewImageUrl": previewUrl.asJSON,
         ]))
@@ -35,7 +35,7 @@ public class MessageBuilder: Builder {
 
     public func addAudio(audioUrl: String, duration: Int) {
         messages.append(JSON.infer([
-            "type": EventType.Audio.asJSON,
+            "type": MessageType.audio.asJSON,
             "originalContentUrl": audioUrl.asJSON,
             "duration": duration.asJSON
         ]))
@@ -43,7 +43,7 @@ public class MessageBuilder: Builder {
 
     public func addLocation(title: String, address: String, latitude: String, longitude: String) {
         messages.append(JSON.infer([
-            "type": EventType.Location.asJSON,
+            "type": MessageType.location.asJSON,
             "title": title.asJSON,
             "address": address.asJSON,
             "latitude": latitude.asJSON,
@@ -53,9 +53,20 @@ public class MessageBuilder: Builder {
 
     public func addSticker(stickerId: String, packageId: String) {
         messages.append(JSON.infer([
-            "type": EventType.Sticker.asJSON,
+            "type": MessageType.sticker.asJSON,
             "packageId": packageId.asJSON,
             "stickerId": stickerId.asJSON
         ]))
+    }
+    
+    public func addImagemap(baseUrl: String,
+                            altText: String,
+                            width: ImagemapBaseSize = .length1040,
+                            height: ImagemapBaseSize = .length1040,
+                            actionBuilder: ImagemapActionBuilder) {
+        let builder = ImagemapMessageBuilder(baseUrl: baseUrl, altText: altText, width: width, height: height, actionBuilder: actionBuilder)
+        if let message = builder.build() {
+            messages.append(message)
+        }
     }
 }
