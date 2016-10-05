@@ -2,6 +2,8 @@ import JSON
 
 public class MessageBuilder: Builder {
     private var messages = [JSON]()
+
+    public init() {}
     
     public func build() throws -> JSON? {
         guard messages.count > 0 else {

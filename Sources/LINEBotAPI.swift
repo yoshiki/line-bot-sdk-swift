@@ -40,13 +40,13 @@ public class LINEBotAPI {
     public func parseRequest(_ request: Request, handler: EventHandler) throws -> Response {
         var body: String = ""
         if case .buffer(let data) = request.body {
-            body = String(describing: data)
+            body = try String(data: data)
         } else {
             return failureResponse
         }
 
         // validate signature
-        guard let signature = request.headers["X-LINE-ChannelSignature"] else {
+        guard let signature = request.headers["X-Line-Signature"] else {
             return Response(status: .forbidden)
         }
         
