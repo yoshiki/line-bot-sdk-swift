@@ -2,17 +2,25 @@ import JSON
 
 // Base Size 1040, 700, 460, 300, 240
 
-public enum ImagemapBaseSize: Int, IntJSONConvertible {
+public enum ImagemapBaseSize: Int {
     case length1040 = 1040
     case length700  = 700
     case length460  = 460
     case length300  = 300
     case lenght240  = 240
+
+    public var asJSON: JSON {
+        return JSON.infer(rawValue)
+    }
 }
 
-public enum ImagemapActionType: String, StringJSONConvertible {
+public enum ImagemapActionType: String{
     case uri = "uri"
     case message = "message"
+
+    public var asJSON: JSON {
+        return JSON.infer(rawValue)
+    }
 }
 
 public struct Bounds {

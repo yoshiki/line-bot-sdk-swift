@@ -1,6 +1,6 @@
 import JSON
 
-public enum EventType: String, StringJSONConvertible {
+public enum EventType: String {
     case message  = "message"
     case follow   = "follow"
     case unfollow = "unfollow"
@@ -8,9 +8,13 @@ public enum EventType: String, StringJSONConvertible {
     case leave    = "leave"
     case postback = "postback"
     case beacon   = "beacon"
+
+    public var asJSON: JSON {
+        return JSON.infer(rawValue)
+    }
 }
 
-public enum MessageType: String, StringJSONConvertible {
+public enum MessageType: String {
     case text     = "text"
     case image    = "image"
     case video    = "video"
@@ -18,12 +22,20 @@ public enum MessageType: String, StringJSONConvertible {
     case location = "location"
     case sticker  = "sticker"
     case imagemap = "imagemap"
+
+    public var asJSON: JSON {
+        return JSON.infer(rawValue)
+    }
 }
 
-public enum SourceType: String, StringJSONConvertible {
+public enum SourceType: String {
     case user  = "user"
     case group = "group"
     case room  = "room"
+
+    public var asJSON: JSON {
+        return JSON.infer(rawValue)
+    }
 }
 
 public struct Source {
