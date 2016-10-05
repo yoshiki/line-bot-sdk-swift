@@ -22,6 +22,7 @@ public enum MessageType: String {
     case location = "location"
     case sticker  = "sticker"
     case imagemap = "imagemap"
+    case template = "template"
 
     public var asJSON: JSON {
         return JSON.infer(rawValue)

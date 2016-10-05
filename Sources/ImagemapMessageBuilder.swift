@@ -53,19 +53,19 @@ public struct Bounds {
 public typealias ImagemapActionBuilder = (ImagemapMessageBuilder) -> Void
 
 public struct ImagemapAction {
-    let type: ImagemapActionType
-    let text: String?
-    let linkUri: String?
-    let area: Bounds
+    private let type: ImagemapActionType
+    private let text: String?
+    private let linkUri: String?
+    private let area: Bounds
     
-    public init(type: ImagemapActionType, text: String, area: Bounds) {
+    public init(type: ImagemapActionType = .message, text: String, area: Bounds) {
         self.type = type
         self.text = text
         self.linkUri = nil
         self.area = area
     }
 
-    public init(type: ImagemapActionType, linkUri: String, area: Bounds) {
+    public init(type: ImagemapActionType = .uri, linkUri: String, area: Bounds) {
         self.type = type
         self.text = nil
         self.linkUri = linkUri
@@ -78,7 +78,7 @@ public struct ImagemapAction {
                 "type": type.asJSON,
                 "text": text.asJSON,
                 "area": area.asJSON
-                ])
+            ])
         } else if let linkUri = linkUri {
             return JSON.infer([
                 "type": type.asJSON,
