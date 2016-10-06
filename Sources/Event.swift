@@ -229,10 +229,6 @@ public struct JoinEvent: Event {
     public init(json: JSON) {
         self.json = json
     }
-
-    public var groupId: String? {
-        return source?.id
-    }
 }
 
 
@@ -241,10 +237,6 @@ public struct LeaveEvent: Event {
     
     public init(json: JSON) {
         self.json = json
-    }
-
-    public var groupId: String? {
-        return source?.id
     }
 }
 
