@@ -52,42 +52,47 @@ public struct Bounds {
 
 public typealias ImagemapActionBuilder = (ImagemapMessageBuilder) -> Void
 
-public struct ImagemapAction {
-    private let type: ImagemapActionType
-    private let text: String?
-    private let linkUri: String?
-    private let area: Bounds
-    
-    public init(type: ImagemapActionType = .message, text: String, area: Bounds) {
-        self.type = type
+public protocol ImagemapAction {
+    var type: ImagemapActionType { get }
+    var area: Bounds { get }
+    var asJSON: JSON { get }
+}
+
+public struct MessageImagemapAction: ImagemapAction {
+    public let type: ImagemapActionType = .message
+    public let area: Bounds
+    private let text: String
+
+    public init(text: String, area: Bounds) {
         self.text = text
-        self.linkUri = nil
         self.area = area
     }
 
-    public init(type: ImagemapActionType = .uri, linkUri: String, area: Bounds) {
-        self.type = type
-        self.text = nil
+    public var asJSON: JSON {
+        return JSON.infer([
+            "type": type.asJSON,
+            "text": text.asJSON,
+            "area": area.asJSON
+        ])
+    }
+}
+
+public struct UriImagemapAction: ImagemapAction {
+    public let type: ImagemapActionType = .uri
+    public let area: Bounds
+    private let linkUri: String
+
+    public init(linkUri: String, area: Bounds) {
         self.linkUri = linkUri
         self.area = area
     }
 
     public var asJSON: JSON {
-        if let text = text {
-            return JSON.infer([
-                "type": type.asJSON,
-                "text": text.asJSON,
-                "area": area.asJSON
-            ])
-        } else if let linkUri = linkUri {
-            return JSON.infer([
-                "type": type.asJSON,
-                "linkUri": linkUri.asJSON,
-                "area": area.asJSON
-            ])
-        } else {
-            return JSON.init(nilLiteral: ())
-        }
+        return JSON.infer([
+            "type": type.asJSON,
+            "linkUri": linkUri.asJSON,
+            "area": area.asJSON
+        ])
     }
 }
 
