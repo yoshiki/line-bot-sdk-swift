@@ -70,18 +70,45 @@ public class LINEBotAPI {
 }
 
 extension LINEBotAPI {
+    public func pushMessage(to userId: String, messages: C7.JSON) throws {
+        let json = JSON.infer([ "to": userId.asJSON, "messages": messages ])
+        let _ = try client.post(uri: URLHelper.pushMessageURL(), json: json)
+    }
+    
     public func replyMessage(replyToken: String, messages: C7.JSON) throws {
         let json = JSON.infer([ "replyToken": replyToken.asJSON, "messages": messages ])
-        try client.post(uri: URLHelper.replyMessageURL(), json: json)
+        let _ = try client.post(uri: URLHelper.replyMessageURL(), json: json)
+    }
+    
+    public func leaveGroup(groupId: String) throws {
+        let _ = try client.post(uri: URLHelper.leaveGroupURL(groupId: groupId))
+    }
+
+    public func leaveRoom(roomId: String) throws {
+        let _ = try client.post(uri: URLHelper.leaveRoomURL(roomId: roomId))
+    }
+    
+    public func getContent(messageId: String) throws -> C7.Data? {
+        return try client.get(uri: URLHelper.getContentURL(messageId: messageId))
+    }
+    
+    public func getProfile(userId: String) throws -> Profile? {
+        if let res = try client.get(uri: URLHelper.getProfileURL(userId: userId)) {
+            let json = try JSONParser().parse(data: res)
+            guard let displayName = json["displayName"]?.stringValue,
+                let userId = json["userId"]?.stringValue,
+                let pictureUrl = json["pictureUrl"]?.stringValue,
+                let statusMessage = json["statusMessage"]?.stringValue else {
+                return nil
+            }
+            return Profile(displayName: displayName, userId: userId, pictureUrl: pictureUrl, statusMessage: statusMessage)
+        } else {
+            return nil
+        }
     }
 }
 
 extension LINEBotAPI {
-    public func pushMessage(to userId: String, messages: C7.JSON) throws {
-        let json = JSON.infer([ "to": userId.asJSON, "messages": messages ])
-        try client.post(uri: URLHelper.pushMessageURL(), json: json)
-    }
-
     public func sendText(to userId: String, text: String) throws {
         let builder = MessageBuilder()
         builder.addText(text: text)

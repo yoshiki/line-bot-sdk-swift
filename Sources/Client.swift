@@ -4,7 +4,7 @@ import Curl
 public typealias Headers = [(String,String)]
 
 public enum ClientError: Error {
-    case invalidURI
+    case invalidURI, unknownError
 }
 
 public struct Client {
@@ -15,13 +15,15 @@ public struct Client {
         self.headers = headers
     }
 
-    public func get(uri: String) throws {
-        let res = curl.get(url: uri, headers: headers)
-        print(res)
+    public func get(uri: String) throws -> Data? {
+        return curl.get(url: uri, headers: headers)
     }
 
-    public func post(uri: String, json: JSON) throws {
-        let res = curl.post(url: uri, headers: headers, body: JSONSerializer().serialize(json: json))
-        print(res?.description)
+    public func post(uri: String, json: JSON? = nil) throws -> Data? {
+        if let json = json {
+            return curl.post(url: uri, headers: headers, body: JSONSerializer().serialize(json: json))
+        } else {
+            return curl.post(url: uri, headers: headers, body: "")
+        }
     }
 }
