@@ -1,4 +1,4 @@
-#LINEBotAPI
+# LINEBotAPI
 
 [![Swift][swift-badge]][swift-url]
 [![Platform][platform-badge]][platform-url]
@@ -7,18 +7,19 @@
 
 ## Overview
 
-**LINEBotAPI** is a SDK of the LINE BOT API Trial for Swift.
+This library is **Unofficial**
+
+**LINEBotAPI** is a SDK of the LINE Messaging API for Swift.
 
 - Swift 3 support
-- Using [Zewo](https://github.com/Zewo/Zewo)
+- Using [Zewo](https://github.com/Zewo/)
 - Linux Ready
 
 ## Features
 
 - [x] Send text/image/video/audio/location/sticker message
-- [x] Send multiple messages
-- [x] Send rich message
-- [x] Handle received operation(add as friend or blocked)
+- [x] Handle follow/unfollow/join/leave/postback/Beacon events
+- [x] Send imagemap/template message
 
 ## A Work In progress
 
@@ -26,13 +27,17 @@ LINEBotAPI is currently in development.
 
 ## Attention
 
-Currently LINEBotAPI works with `DEVELOPMENT-SNAPSHOT-2016-04-12-a`.
+Currently LINEBotAPI works with `3.0`.
 
 ## Getting started
 
 ### Installation
 
 Before we start, we need to install some tools and dependencies.
+
+### Swift
+
+Install Swift using swiftenv or use docker images([docker-swift](https://github.com/swiftdocker/docker-swift)).
 
 ### swiftenv
 
@@ -41,42 +46,13 @@ Before we start, we need to install some tools and dependencies.
 ```
 % git clone https://github.com/kylef/swiftenv.git ~/.swiftenv
 ```
-and add settings for your shell(For more information, please see [swiftenv's wiki](https://github.com/kylef/swiftenv)).
+and add settings for your shell(For more information, please see [swiftenv's wiki](https://github.com/kylef/swiftenv).
 
-### Swift
-
-Install swift using swiftenv.
+Then install Swift 3.0. This process does not need on Mac OS X installed Xcode 8, only Linux.
 
 ```
-% swiftenv install DEVELOPMENT-SNAPSHOT-2016-04-12-a
+% swiftenv install 3.0
 ```
-
-### Install Zewo
-
-Install libraries depend on [Zewo](https://github.com/Zewo/Zewo).
-
-- On OS X
-
-    Install Zewo dependencies
-    ```
-    % brew install zewo/tap/zewo
-    ```
-
-- On Linux
-
-    Install Zewo dependencies
-
-    ```
-    % echo "deb [trusted=yes] http://apt.zewo.io/deb ./" | sudo tee --append /etc/apt/sources.list
-    % sudo apt-get update
-    % sudo apt-get install zewo
-    ```
-
-    Install Clang and ICU
-
-    ```
-    % sudo apt-get install clang libicu-dev
-    ```
 
 ## Install other libraries.
 
@@ -90,7 +66,8 @@ Install libraries depend on [Zewo](https://github.com/Zewo/Zewo).
 - On Linux
 
     ```
-    % sudo apt-get install build-essential libcurl4-openssl-dev
+    % sudo apt-get update
+    % sudo apt-get install libcurl4-openssl-dev
     ```
 
 # Create project
@@ -105,19 +82,19 @@ Let's create your LINE Bot!
 % mkdir linebot && cd linebot
 ```
 
-Set Swift version to `DEVELOPMENT-SNAPSHOT-2016-04-12-a`.
+Set Swift version to `3.0` if you need.
 
 ```
-% swiftenv local DEVELOPMENT-SNAPSHOT-2016-04-12-a
+% swiftenv local 3.0
 ```
 
-Initialize project directory with swift package manager(**SPM**).
+Initialize project directory with Swift Package Manager(**SPM**).
 
 ```
-% swift build --init
+% swift package init --type executable
 ```
 
-Then this command will create the basic structure for app.
+Then this command will create the basic structure for executable command.
 
 ```
 .
@@ -137,7 +114,7 @@ import PackageDescription
 let package = Package(
     name: "linebot",
     dependencies: [
-        .Package(url: "https://github.com/yoshik/LINEBotAPI.git", majorVersion: 0, minor: 1),
+        .Package(url: "https://github.com/yoshik/LINEBotAPI.git", majorVersion: 1, minor: 0),
     ]
 )
 ```
@@ -150,11 +127,11 @@ Next, write main program in `main.swift`.
 import LINEBotAPI
 
 do {
-    if let mid = getVar(name: "TO_MID") {
+    if let userId = getVar(name: "USER_ID") {
         let bot = try LINEBotAPI()
-        try bot.sendText(to: mid, text: "Hello! Hello!")
+        try bot.sendText(to: userId, text: "Hello! Hello!")
     } else {
-        print("set env TO_MID")
+        print("set env USER_ID")
     }
 } catch let e {
     print(e)
@@ -162,45 +139,28 @@ do {
 ```
 
 This code:
-- get target `mid`(A user id on LINE)
-- send text to `mid` specified.
+- get target `userId`(A user id on LINE)
+- send text to `userId` specified.
 
 ## Build project
 
 Change lib and include paths to your environment.
 
 ```
-% swift build -Xlinker -L/usr/local/lib -Xcc -I/usr/local/include -Xswiftc -I/usr/local/include
-```
-
->On Linux only, currently, [venice](https://github.com/VeniceX/Venice)'s directory structure is invalid. So you must run following command only once before build. For more information, see LINEBotAPI's `Makefile`.
-
-```
-# fetch dependencies only.
-% swift build --fetch
-
-# and move source files to upper directory.
-% mv ./Packages/Venice-*/Source/Venice/*/* ./Packages/Venice-*/Source/
-% rm -fr ./Packages/Venice-*/Source/Venice
+% swift build
 ```
 
 ## Run it
 
 After it compiles, run it.
 
->Your must specify `LINE_CHANNEL_ID`, `LINE_CHANNEL_SECRET`, `LINE_BOT_MID` and `TO_MID` to yours. `TO_MID` is your mid.
+>Your must specify `CHANNEL_SECRET`, `ACCESS_TOKEN` and `USER_ID` to yours. `USER_ID` is your user id.
 
 ```
-% env LINE_CHANNEL_ID=XXXXXXXXX LINE_CHANNEL_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX LINE_BOT_MID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX TO_MID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX .build/debug/linebot
+% env CHANNEL_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX ACCESS_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX USER_ID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX .build/debug/linebot
 ```
 
 You will get a message from bot on LINE if you had setup setting on bot management page.
-
-> If you got an error `.build/debug/linebot: error while loading shared libraries: libCLibvenice.so: cannot open shared object file: No such file or directory`, add `.build/debug/` to your `LD_LIBRARY_PATH`.
-
-```
-% export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.build/debug/
-```
 
 # Start Server
 
@@ -213,87 +173,47 @@ Open `main.swift` and make it look like this:
 ```swift
 import LINEBotAPI
 import HTTPServer
-import Router
 
-do {
-    let bot = try LINEBotAPI()
+let bot = try LINEBotAPI()
+let log = LogMiddleware(debug: true)
 
-    // Initializer a router.
-    let router = Router { (route) in
-        // Waiting for POST request on /linebot/callback.
-        route.post("/linebot/callback") { request -> Response in
-            // Parsing request and validate signature.
-            return try bot.parseRequest(request) { content in
-                // Processing each messages or operations.
-                // The contents can be enqueued to external storages as you wish.
-                if let content = try ContentParser.parse(content) {
-                    if let message = content as? TextMessage,
-                        mid = message.fromMid {
-                        // send text if content is a message.
-                        try bot.sendText(to: mid, text: "Hi! Hi!")
-                    } else if let op = content as? Operation,
-                        mid = op.fromMid,
-                        type = op.opType where type = .Added {
-                        // send text if content is a operation to add.
-                        try bot.sendText(to; mid, text: "Thanks to add as friend")
-                    }
+// Initializer a router.
+let router = BasicRouter { (routes) in
+    // Waiting for POST request on /callback.
+    routes.post("/callback") { (request) in
+        // Parsing request and validate signature
+        return try bot.parseRequest(request) { (event) in
+            if let textMessage = event as? TextMessage, let text = textMessage.text {
+                let builder = MessageBuilder()
+                builder.addText(text: text)
+                if let messages = try builder.build(), let replyToken = textMessage.replyToken {
+                    try bot.replyMessage(replyToken: replyToken, messages: messages)
                 }
             }
         }
     }
-
-    // start server
-    try Server(router).start()
-} catch let e {
-    print(e)
 }
+
+// start server
+let server = try Server(port: 8080, middleware: [log], responder: router)
+try server.start()
 ```
+
+>This is echo bot.
 
 Then build and run it.
 
 ```
-% env LINE_CHANNEL_ID=XXXXXXXXX LINE_CHANNEL_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX LINE_BOT_MID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX .build/debug/linebot
+% env CHANNEL_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX ACCESS_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX USER_ID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX .build/debug/linebot
 ```
 
 The server will be started on port 8080.
 
-This server will be waiting a POST request from Bot Server at `/linebot/callback`.
+This server will be waiting a POST request from Bot Server at `/callback`.
 
 # Other examples
 
-## Send multiple messages
-
-```swift
-try bot.sendMultipleMessage { builder in
-    builder.addText(text: "Hello, bot!")
-    builder.addImage(
-        imageUrl: "http://www.example.com/some.jpg",
-        previewUrl: "http://www.example.com/some-thumb.jpg",
-    )
-}
-```
-
-## Send rich messages
-
-```swift
-try bot.sendRichMessage(to: mid, imageUrl: "http://example.com/images", altText: "Text for low-level devices") { (builder) in
-    let action0 = RichMessageAction(name: "openHomepage", text: "Open Homepage", linkUri: "http://example.com/homepage")
-    let listener0 = RichMessageListener(bounds: Bounds(x: 0, y: 0, width: 1040, height: 520), action: action0)
-    builder.addListener(listener: listener0)
-
-    let action1 = RichMessageAction(name: "showItem", text: "Show Item", linkUri: "http://example.com/showItem")
-    let listener1 = RichMessageListener(bounds: Bounds(x: 0, y: 520, width: 520, height: 520), action: action1)
-    builder.addListener(listener: listener1)
-
-    let action2 = RichMessageAction(name: "search", text: "Search", linkUri: "http://example.com/search")
-    let listener2 = RichMessageListener(bounds: Bounds(x: 520, y: 520, width: 520, height: 520), action: action2)
-    builder.addListener(listener: listener2)
-}
-```
-
-`imageUrl` must serve images of some size(For more information, see [official docs](https://developers.line.me/bot-api/api-reference#sending_rich_content_message_prerequisite)).
-
-`width` must be 1040px for `Bounds()` and a maximum size of `height` must be less than 2080px.
+>TODO
 
 # Tips
 
@@ -302,7 +222,7 @@ try bot.sendRichMessage(to: mid, imageUrl: "http://example.com/images", altText:
 Yes, sure. You can generate a xcode project file with following command.
 
 ```
-% swift build -Xlinker -L/usr/local/lib -Xcc -I/usr/local/include -Xswiftc -I/usr/local/include -X
+% swift package generate-xcodeproj
 ```
 
 ## Can I use https server?
