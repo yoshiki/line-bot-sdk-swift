@@ -131,13 +131,17 @@ extension LINEBotAPI {
     }
 
     public func sendImagemap(to userId: String,
-                             baseUrl: String,
-                             altText: String,
-                             width: ImagemapBaseSize = .length1040,
-                             height: ImagemapBaseSize = .length1040,
-                             actionBuilder: ImagemapActionBuilder) throws {
+                             imagemapBuilder: ImagemapBuilder) throws {
         let builder = MessageBuilder()
-        builder.addImagemap(baseUrl: baseUrl, altText: altText, width: width, height: height, actionBuilder: actionBuilder)
+        builder.addImagemap(imagemapBuilder: imagemapBuilder)
+        if let messages = try builder.build() {
+            try pushMessage(to: userId, messages: messages)
+        }
+    }
+    
+    public func sendTemplate(to userId: String, altText: String, templateBuilder: TemplateBuilder) throws {
+        let builder = MessageBuilder()
+        try builder.addTemplate(altText: altText, templateBuilder: templateBuilder)
         if let messages = try builder.build() {
             try pushMessage(to: userId, messages: messages)
         }

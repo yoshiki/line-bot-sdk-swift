@@ -1,5 +1,7 @@
 import JSON
 
+public typealias ImagemapBuilder = () -> Imagemap
+
 // Base Size 1040, 700, 460, 300, 240
 
 public enum ImagemapBaseSize: Int {
@@ -50,7 +52,10 @@ public struct Bounds {
     }
 }
 
-public typealias ImagemapActionBuilder = (ImagemapMessageBuilder) -> Void
+public protocol ImagemapActionMutable {
+    var actions: [ImagemapAction] { get }
+    func addAction(action: ImagemapAction)
+}
 
 public protocol ImagemapAction {
     var type: ImagemapActionType { get }
@@ -96,7 +101,7 @@ public struct UriImagemapAction: ImagemapAction {
     }
 }
 
-public class ImagemapMessageBuilder: Builder {
+public class Imagemap: ImagemapActionMutable {
     private struct BaseSize {
         let width: ImagemapBaseSize
         let height: ImagemapBaseSize
@@ -104,31 +109,29 @@ public class ImagemapMessageBuilder: Builder {
             return JSON.infer([
                 "width": width.asJSON,
                 "height": height.asJSON
-            ])
+                ])
         }
     }
     private let baseUrl: String
     private let altText: String
     private let baseSize: BaseSize
     
-    private var actions = [ImagemapAction]()
+    public var actions = [ImagemapAction]()
     
     public init(baseUrl: String,
                 altText: String,
                 width: ImagemapBaseSize = .length1040,
-                height: ImagemapBaseSize = .length1040,
-                actionBuilder: ImagemapActionBuilder) {
+                height: ImagemapBaseSize = .length1040) {
         self.baseUrl = baseUrl
         self.altText = altText
         self.baseSize = BaseSize(width: width, height: height)
-        actionBuilder(self)
     }
     
     public func addAction(action: ImagemapAction) {
         actions.append(action)
     }
-
-    public func build() -> JSON? {
+    
+    public var asJSON: JSON {
         return JSON.infer([
             "type": MessageType.imagemap.asJSON,
             "baseUrl": baseUrl.asJSON,
@@ -136,5 +139,17 @@ public class ImagemapMessageBuilder: Builder {
             "baseSize": baseSize.asJSON,
             "actions": JSON.infer(actions.flatMap { $0.asJSON })
         ])
+    }
+}
+
+public struct ImagemapMessageBuilder: Builder {
+    private let imagemap: Imagemap
+    
+    public init(imagemap: Imagemap) {
+        self.imagemap = imagemap
+    }
+
+    public func build() -> JSON? {
+        return imagemap.asJSON
     }
 }

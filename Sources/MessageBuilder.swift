@@ -53,6 +53,7 @@ public class MessageBuilder: Builder {
         ]))
     }
 
+    // See also: https://devdocs.line.me/files/sticker_list.pdf
     public func addSticker(stickerId: String, packageId: String) {
         messages.append(JSON.infer([
             "type": MessageType.sticker.asJSON,
@@ -61,13 +62,18 @@ public class MessageBuilder: Builder {
         ]))
     }
     
-    public func addImagemap(baseUrl: String,
-                            altText: String,
-                            width: ImagemapBaseSize = .length1040,
-                            height: ImagemapBaseSize = .length1040,
-                            actionBuilder: ImagemapActionBuilder) {
-        let builder = ImagemapMessageBuilder(baseUrl: baseUrl, altText: altText, width: width, height: height, actionBuilder: actionBuilder)
+    public func addImagemap(imagemapBuilder: ImagemapBuilder) {
+        let imagemap = imagemapBuilder()
+        let builder = ImagemapMessageBuilder(imagemap: imagemap)
         if let message = builder.build() {
+            messages.append(message)
+        }
+    }
+    
+    public func addTemplate(altText: String, templateBuilder: TemplateBuilder) throws {
+        let template = templateBuilder()
+        let builder = TemplateMessageBuilder(altText: altText, template: template)
+        if let message = try builder.build() {
             messages.append(message)
         }
     }

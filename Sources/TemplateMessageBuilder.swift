@@ -1,5 +1,7 @@
 import JSON
 
+public typealias TemplateBuilder = () -> Template
+
 public enum TemplateType: String {
     case buttons  = "buttons"
     case confirm  = "confirm"
@@ -90,26 +92,35 @@ public struct UriTemplateAction: TemplateAction {
     }
 }
 
+public protocol TemplateActionMutable {
+    var actions: [TemplateAction] { get }
+    func addAction(action: TemplateAction)
+}
+
+public protocol TemplateColumnMutable {
+    var columns: [CarouselColumn] { get }
+    func addColumn(column: CarouselColumn)
+}
+
 public protocol Template {
     var type: TemplateType { get }
     var asJSON: JSON { get }
 }
 
-public struct ButtonsTemplate: Template {
+public class ButtonsTemplate: Template, TemplateActionMutable {
     public let type: TemplateType = .buttons
     private let thumbnailImageUrl: String?
     private let title: String?
     private let text: String
-    public var actions: [TemplateAction]
+    public var actions = [TemplateAction]()
     
-    init(thumbnailImageUrl: String? = nil, title: String? = nil, text: String) {
+    public init(thumbnailImageUrl: String? = nil, title: String? = nil, text: String) {
         self.thumbnailImageUrl = thumbnailImageUrl
         self.title = title
         self.text = text
-        self.actions = [TemplateAction]()
     }
     
-    public mutating func addAction(action: TemplateAction) {
+    public func addAction(action: TemplateAction) {
         actions.append(action)
     }
     
@@ -131,17 +142,16 @@ public struct ButtonsTemplate: Template {
     }
 }
 
-public struct ConfirmTemplate: Template {
+public class ConfirmTemplate: Template, TemplateActionMutable {
     public var type: TemplateType = .confirm
     private let text: String
-    public var actions: [TemplateAction]
+    public var actions = [TemplateAction]()
     
-    init(text: String) {
+    public init(text: String) {
         self.text = text
-        self.actions = [TemplateAction]()
     }
     
-    public mutating func addAction(action: TemplateAction) {
+    public func addAction(action: TemplateAction) {
         actions.append(action)
     }
     
@@ -157,15 +167,13 @@ public struct ConfirmTemplate: Template {
     }
 }
 
-public struct CarouselTemplate: Template {
+public class CarouselTemplate: Template, TemplateColumnMutable {
     public var type: TemplateType = .carousel
-    public var columns: [CarouselColumn]
+    public var columns = [CarouselColumn]()
     
-    init() {
-        self.columns = [CarouselColumn]()
-    }
-    
-    public mutating func addColumn(column: CarouselColumn) {
+    public init() {}
+
+    public func addColumn(column: CarouselColumn) {
         columns.append(column)
     }
     
@@ -180,19 +188,22 @@ public struct CarouselTemplate: Template {
     }
 }
 
-public struct CarouselColumn {
+public class CarouselColumn: TemplateActionMutable {
     private let thumbnailImageUrl: String?
     private let title: String?
     private let text: String
-    public var actions: [TemplateAction]
+    public var actions = [TemplateAction]()
     
-    init(thumbnailImageUrl: String? = nil, title: String? = nil, text: String) {
+    public init(thumbnailImageUrl: String? = nil, title: String? = nil, text: String) {
         self.thumbnailImageUrl = thumbnailImageUrl
         self.title = title
         self.text = text
-        self.actions = [TemplateAction]()
     }
-    
+
+    public func addAction(action: TemplateAction) {
+        actions.append(action)
+    }
+
     public var asJSON: JSON {
         var tmpl = [
             "text": text.asJSON
@@ -210,7 +221,11 @@ public struct CarouselColumn {
     }
 }
 
-public class TemplateMessageBuilder: Builder {
+public enum TemplateError: Error {
+    case tooManyActions, tooManyColumns, actionsNotFound, columnsNotFound
+}
+
+public struct TemplateMessageBuilder: Builder {
     private let altText: String
     private let template: Template
     
@@ -220,10 +235,40 @@ public class TemplateMessageBuilder: Builder {
     }
     
     public func build() throws -> JSON? {
+        try validate()
         return JSON.infer([
             "type": MessageType.template.asJSON,
             "altText": altText.asJSON,
             "template": template.asJSON
         ])
+    }
+    
+    private func validate() throws {
+        if case .buttons = template.type, let t = template as? ButtonsTemplate {
+            if t.actions.isEmpty {
+                throw TemplateError.actionsNotFound
+            } else if t.actions.count > 4 {
+                throw TemplateError.tooManyActions
+            }
+        } else if case .confirm = template.type, let t = template as? ConfirmTemplate {
+            if t.actions.isEmpty {
+                throw TemplateError.actionsNotFound
+            } else if t.actions.count > 2 {
+                throw TemplateError.tooManyActions
+            }
+        } else if case .carousel = template.type, let t = template as? CarouselTemplate {
+            if t.columns.isEmpty {
+                throw TemplateError.columnsNotFound
+            } else if t.columns.count > 5 {
+                throw TemplateError.tooManyColumns
+            }
+            for column in t.columns {
+                if column.actions.isEmpty {
+                    throw TemplateError.actionsNotFound
+                } else if column.actions.count > 4 {
+                    throw TemplateError.tooManyActions
+                }
+            }
+        }
     }
 }
