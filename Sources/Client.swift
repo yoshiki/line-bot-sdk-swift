@@ -15,11 +15,11 @@ public struct Client {
         self.headers = headers
     }
 
-    public func get(uri: String) throws -> Data? {
+    public func get(uri: String) -> Data? {
         return curl.get(url: uri, headers: headers)
     }
 
-    public func post(uri: String, json: JSON? = nil) throws -> Data? {
+    public func post(uri: String, json: JSON? = nil) -> Data? {
         if let json = json {
             return curl.post(url: uri, headers: headers, body: JSONSerializer().serialize(json: json))
         } else {

@@ -7,7 +7,7 @@ public class MessageBuilder: Builder {
     
     public func build() throws -> JSON? {
         guard messages.count > 0 else {
-            throw BuilderError.contentsNotFound
+            throw BuilderError.messagesNotFound
         }
         return JSON.infer(messages)
     }

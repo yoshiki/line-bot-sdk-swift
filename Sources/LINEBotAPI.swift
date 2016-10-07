@@ -4,8 +4,7 @@ import Base64
 import HTTP
 
 public enum LINEBotAPIError: Error {
-    case channelInfoNotFound
-    case cventNotFound
+    case channelSecretNotFound
 }
 
 public class LINEBotAPI {
@@ -14,15 +13,11 @@ public class LINEBotAPI {
     internal let client: Client
     private let headers: Headers
     
-    public let channelSecret: String
+    public let channelSecret: String?
     
     public var failureResponse: Response = Response(status: .forbidden)
 
-    public init() throws {
-        guard let channelSecret = Env.getVar(name: "CHANNEL_SECRET"),
-            let accessToken = Env.getVar(name: "ACCESS_TOKEN") else {
-            throw LINEBotAPIError.channelInfoNotFound
-        }
+    public init(accessToken: String, channelSecret: String? = nil) {
         self.headers = [
             ("Content-Type", "application/json; charset=utf-8"),
             ("Authorization", "Bearer \(accessToken)")
@@ -31,7 +26,10 @@ public class LINEBotAPI {
         self.client = Client(headers: headers)
     }
 
-    public func validateSignature(message: String, channelSecret: String, signature: String) throws -> Bool {
+    public func validateSignature(message: String, signature: String) throws -> Bool {
+        guard let channelSecret = channelSecret else {
+            throw LINEBotAPIError.channelSecretNotFound
+        }
         let hashed = Hash.hmac(.sha256, key: Data(channelSecret), message: Data(message))
         let base64 = Base64.encode(Data(hashed))
         return (base64 == signature)
@@ -52,7 +50,6 @@ public class LINEBotAPI {
         
         let isValidSignature = try validateSignature(
             message: body,
-            channelSecret: channelSecret,
             signature: signature
         )
 
@@ -70,30 +67,30 @@ public class LINEBotAPI {
 }
 
 extension LINEBotAPI {
-    public func pushMessage(to userId: String, messages: C7.JSON) throws {
+    public func pushMessage(to userId: String, messages: C7.JSON) {
         let json = JSON.infer([ "to": userId.asJSON, "messages": messages ])
-        let _ = try client.post(uri: URLHelper.pushMessageURL(), json: json)
+        let _ = client.post(uri: URLHelper.pushMessageURL(), json: json)
     }
     
-    public func replyMessage(replyToken: String, messages: C7.JSON) throws {
+    public func replyMessage(replyToken: String, messages: C7.JSON) {
         let json = JSON.infer([ "replyToken": replyToken.asJSON, "messages": messages ])
-        let _ = try client.post(uri: URLHelper.replyMessageURL(), json: json)
+        let _ = client.post(uri: URLHelper.replyMessageURL(), json: json)
     }
     
-    public func leaveGroup(groupId: String) throws {
-        let _ = try client.post(uri: URLHelper.leaveGroupURL(groupId: groupId))
+    public func leaveGroup(groupId: String) {
+        let _ = client.post(uri: URLHelper.leaveGroupURL(groupId: groupId))
     }
 
-    public func leaveRoom(roomId: String) throws {
-        let _ = try client.post(uri: URLHelper.leaveRoomURL(roomId: roomId))
+    public func leaveRoom(roomId: String) {
+        let _ = client.post(uri: URLHelper.leaveRoomURL(roomId: roomId))
     }
     
-    public func getContent(messageId: String) throws -> C7.Data? {
-        return try client.get(uri: URLHelper.getContentURL(messageId: messageId))
+    public func getContent(messageId: String) -> C7.Data? {
+        return client.get(uri: URLHelper.getContentURL(messageId: messageId))
     }
     
     public func getProfile(userId: String) throws -> Profile? {
-        if let res = try client.get(uri: URLHelper.getProfileURL(userId: userId)) {
+        if let res = client.get(uri: URLHelper.getProfileURL(userId: userId)) {
             let json = try JSONParser().parse(data: res)
             guard let displayName = json["displayName"]?.stringValue,
                 let userId = json["userId"]?.stringValue,
@@ -113,7 +110,7 @@ extension LINEBotAPI {
         let builder = MessageBuilder()
         builder.addText(text: text)
         if let messages = try builder.build() {
-            try pushMessage(to: userId, messages: messages)
+            pushMessage(to: userId, messages: messages)
         }
     }
 
@@ -121,7 +118,7 @@ extension LINEBotAPI {
         let builder = MessageBuilder()
         builder.addImage(imageUrl: imageUrl, previewUrl: previewUrl)
         if let messages = try builder.build() {
-            try pushMessage(to: userId, messages: messages)
+            pushMessage(to: userId, messages: messages)
         }
     }
 
@@ -129,7 +126,7 @@ extension LINEBotAPI {
         let builder = MessageBuilder()
         builder.addVideo(videoUrl: videoUrl, previewUrl: previewUrl)
         if let messages = try builder.build() {
-            try pushMessage(to: userId, messages: messages)
+            pushMessage(to: userId, messages: messages)
         }
     }
 
@@ -137,7 +134,7 @@ extension LINEBotAPI {
         let builder = MessageBuilder()
         builder.addAudio(audioUrl: audioUrl, duration: duration)
         if let messages = try builder.build() {
-            try pushMessage(to: userId, messages: messages)
+            pushMessage(to: userId, messages: messages)
         }
     }
 
@@ -145,7 +142,7 @@ extension LINEBotAPI {
         let builder = MessageBuilder()
         builder.addLocation(title: title, address: address, latitude: latitude, longitude: longitude)
         if let messages = try builder.build() {
-            try pushMessage(to: userId, messages: messages)
+            pushMessage(to: userId, messages: messages)
         }
     }
 
@@ -153,7 +150,7 @@ extension LINEBotAPI {
         let builder = MessageBuilder()
         builder.addSticker(stickerId: stickerId, packageId: packageId)
         if let messages = try builder.build() {
-            try pushMessage(to: userId, messages: messages)
+            pushMessage(to: userId, messages: messages)
         }
     }
 
@@ -162,7 +159,7 @@ extension LINEBotAPI {
         let builder = MessageBuilder()
         builder.addImagemap(imagemapBuilder: imagemapBuilder)
         if let messages = try builder.build() {
-            try pushMessage(to: userId, messages: messages)
+            pushMessage(to: userId, messages: messages)
         }
     }
     
@@ -170,7 +167,7 @@ extension LINEBotAPI {
         let builder = MessageBuilder()
         try builder.addTemplate(altText: altText, templateBuilder: templateBuilder)
         if let messages = try builder.build() {
-            try pushMessage(to: userId, messages: messages)
+            pushMessage(to: userId, messages: messages)
         }
     }
 }

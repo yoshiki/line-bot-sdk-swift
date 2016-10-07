@@ -126,16 +126,8 @@ Next, write main program in `main.swift`.
 ```swift
 import LINEBotAPI
 
-do {
-    if let userId = getVar(name: "USER_ID") {
-        let bot = try LINEBotAPI()
-        try bot.sendText(to: userId, text: "Hello! Hello!")
-    } else {
-        print("set env USER_ID")
-    }
-} catch let e {
-    print(e)
-}
+let bot = LINEBotAPI(accessToken: "YOUR_ACCESS_TOKEN")
+try bot.sendText(to: "USER_ID", text: "Hello! Hello!")
 ```
 
 This code:
@@ -154,17 +146,17 @@ Change lib and include paths to your environment.
 
 After it compiles, run it.
 
->Your must specify `CHANNEL_SECRET`, `ACCESS_TOKEN` and `USER_ID` to yours. `USER_ID` is your user id.
+>Your must specify USER_ID` to yours. `USER_ID` is your user id.
 
 ```
-% env CHANNEL_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX ACCESS_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX USER_ID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX .build/debug/linebot
+% .build/debug/linebot
 ```
 
 You will get a message from bot on LINE if you had setup setting on bot management page.
 
 # Start Server
 
-LINEBotAPI allows you to start server using `Zewo`.
+LINEBotAPI supports server mode using `Zewo`.
 
 ## main.swift
 
@@ -174,7 +166,10 @@ Open `main.swift` and make it look like this:
 import LINEBotAPI
 import HTTPServer
 
-let bot = try LINEBotAPI()
+let bot = LINEBotAPI(
+    accessToken: "YOUR_ACCESS_TOKEN",
+    channelSecret: "YOUR_CHANNEL_SECRET"
+)
 let log = LogMiddleware(debug: true)
 
 // Initializer a router.
@@ -201,10 +196,13 @@ try server.start()
 
 >This is echo bot.
 
+## Build and Run it
+
 Then build and run it.
 
 ```
-% env CHANNEL_SECRET=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX ACCESS_TOKEN=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX USER_ID=XXXXXXXXXXXXXXXXXXXXXXXXXXXXX .build/debug/linebot
+% swift build
+% .build/debug/linebot
 ```
 
 The server will be started on port 8080.

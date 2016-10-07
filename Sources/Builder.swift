@@ -1,7 +1,7 @@
 import JSON
 
 public enum BuilderError: Error {
-    case contentsNotFound
+    case messagesNotFound
 }
 
 public protocol Builder {
